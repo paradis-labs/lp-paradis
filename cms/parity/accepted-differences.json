@@ -1,0 +1,60 @@
+{
+  "differences": [
+    {
+      "path": "getNavBar(*).logo.width",
+      "reason": "O hcms não tem dimensões do logo (SVG); a UI usa o seu piso, igual ao valor do Payload (134×25)"
+    },
+    {
+      "path": "getNavBar(*).logo.height",
+      "reason": "O hcms não tem dimensões do logo (SVG); a UI usa o seu piso, igual ao valor do Payload (134×25)"
+    },
+    {
+      "path": "getNavBar(*).logo.image.**",
+      "reason": "Ficheiro SVG do hcms: sem dimensões, e o alt vem dos metadados do ficheiro"
+    },
+    {
+      "path": "getNavBar(*).logo.imageLight.**",
+      "reason": "Ficheiro SVG do hcms: sem dimensões, e o alt vem dos metadados do ficheiro"
+    },
+    {
+      "path": "getFooter(*).logo.**",
+      "reason": "Ficheiro SVG do hcms: sem dimensões, e o alt vem dos metadados do ficheiro"
+    },
+    {
+      "path": "getFooter(*).socialLinks[*].label",
+      "reason": "O hcms não tem rótulo nas redes (lacuna da fase 1): o nome acessível deriva da plataforma"
+    },
+    {
+      "path": "getHomepage(*).testimonials.items[*].date",
+      "reason": "Data da última edição em cada CMS; o hcms não tem a data de edição do Payload"
+    },
+    {
+      "path": "getHomepage(*).testimonials.items[*].avatar.alt",
+      "reason": "O alt vem dos metadados do ficheiro no hcms (o nome do autor), em vez de \"Avatar\""
+    },
+    {
+      "path": "getHomepage(*).services.ourServicesCT.backgroundVideo.alt",
+      "reason": "O alt vem dos metadados do ficheiro no hcms"
+    },
+    {
+      "path": "getQuotePage(*).form.interests**",
+      "reason": "São as mesmas offerings de getHomepage.services.items, comparadas aí. No hcms têm uma só ordem (offerings.sort); o Payload tinha uma ordem própria para os interesses"
+    },
+    {
+      "path": "getFooter(en).directContact.emailHeading",
+      "reason": "O Payload tinha o próprio e-mail no título; \"Email\" é o título certo (aceite também em cms/hcms/accepted-differences.json)"
+    },
+    {
+      "path": "getHomepage(en).faqs.items[2].answer",
+      "reason": "A citação (blockquote) do Payload foi retirada de propósito no seed do template (tooling/seed/paradis.mjs); o texto é o mesmo"
+    },
+    {
+      "path": "getHomepage(en).faqs.items[3].answer",
+      "reason": "A citação (blockquote) do Payload foi retirada de propósito no seed do template (tooling/seed/paradis.mjs); o texto é o mesmo"
+    },
+    {
+      "path": "getHomepage(en).testimonials.items[0].quote",
+      "reason": "Pontuação corrigida no hcms (aceite também em cms/hcms/accepted-differences.json)"
+    }
+  ]
+}

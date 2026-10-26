@@ -1,0 +1,35 @@
+{
+  "differences": [
+    {
+      "field": "footer.copyrightText",
+      "locale": "pt-AO",
+      "reason": "Tradução pt nova no hcms; o Payload tinha o texto inglês em pt"
+    },
+    {
+      "field": "footer.directContact.emailHeading",
+      "locale": "en-US",
+      "reason": "O Payload tinha o próprio e-mail no título; \"Email\" é o título certo"
+    },
+    {
+      "field": "footer.cta.primaryButton.label",
+      "locale": "pt-AO",
+      "reason": "O Payload tinha \"Contact Us\" (inglês) em pt; o hcms tem o rótulo traduzido"
+    },
+    {
+      "field": "homepage.services.ourServicesCT.title",
+      "locale": "pt-AO",
+      "reason": "Tradução pt nova no hcms; o Payload tinha um título inglês antigo em pt"
+    },
+    {
+      "field": "homepage.projects.primaryCta.label",
+      "locale": "pt-AO",
+      "reason": "\"Ver todos\" traduzido; o Payload tinha o rótulo inglês em pt"
+    },
+    {
+      "field": "homepage.testimonials.items[alfredo vidinhas].quote",
+      "locale": "en-US",
+      "reason": "Pontuação corrigida no hcms (\"calculations, simply.\")"
+    }
+  ],
+  "pairs": []
+}

@@ -1,0 +1,219 @@
+# Verificação de conteúdo hcms × Payload — 2026-10-24T01:08:32.720Z
+hcms: hcms.paradis.host · site "paradis"
+
+## 1. Textos de exemplo ([EXEMPLO]) — 12
+✗ home → block_hero.title (en-US) — "[EXEMPLO] We design and build digital products"
+✗ home → block_hero.lead (en-US) — "[EXEMPLO] Replace with the live headline and description from Payload (hero collection)."
+✗ home → block_hero.title (pt-AO) — "[EXEMPLO] Desenhamos e construímos produtos digitais"
+✗ home → block_hero.lead (pt-AO) — "[EXEMPLO] Substituir pelo título e pela descrição reais (colecção hero no Payload)."
+✗ home → block_media_text #about-us.lead (pt-AO) — "[EXEMPLO] Substituir por homepage.services.subtitle."
+✗ home → block_media_text #about-us.lead (en-US) — "[EXEMPLO] Replace with homepage.services.subtitle."
+✗ home → block_collection #services.lead (en-US) — "[EXEMPLO] Replace with ourServicesCT.description."
+✗ home → block_collection #services.lead (pt-AO) — "[EXEMPLO] Substituir por ourServicesCT.description."
+✗ projects[kitenda].summary (en-US) — "[EXEMPLO] Short description of Kitenda. Replace with the live copy."
+✗ projects[kitenda].summary (pt-AO) — "[EXEMPLO] Descrição curta de Kitenda. Substituir pelo texto real."
+✗ projects[ficha-segura].summary (pt-AO) — "[EXEMPLO] Descrição curta de Ficha Segura. Substituir pelo texto real."
+✗ projects[ficha-segura].summary (en-US) — "[EXEMPLO] Short description of Ficha Segura. Replace with the live copy."
+
+## 2. Traduções em falta (en-US × pt-AO) — 0
+
+## 3. Diferenças face ao Payload — 42
+✗ navbar.links[products] ↔ navbar.links
+    só no Payload (sem par no hcms)
+✗ navbar.links[testimonials] ↔ navbar.links
+    só no Payload (sem par no hcms)
+✗ footer.copyrightText (en-US) ↔ sites[paradis].copyright_text
+    payload: "Paradis Labs - All rights reserved."
+    hcms:    "Paradis.Labs - All rights reserved."
+✗ footer.copyrightText (pt-AO) ↔ sites[paradis].copyright_text
+    payload: "Paradis.Labs - All rights reserved."
+    hcms:    "Paradis.Labs - Todos os direitos reservados."
+✗ footer.directContact.reachHeading (en-US) ↔ contact → block_contact.title
+    payload: "Reach us directly"
+    hcms:    "Reach Us Directly"
+✗ footer.directContact.emailHeading (en-US) ↔ contact → block_contact.email_label
+    payload: "geral@paradis.host"
+    hcms:    "Email"
+✗ footer.cta.primaryButton.label (pt-AO) ↔ navigations[footer_actions].button_primary.label
+    payload: "Contact Us"
+    hcms:    "Pedir orçamento - Grátis"
+✗ footer.socialLinks[dribbble] ↔ sites[paradis].social_links
+    só no hcms (sem par no Payload)
+✗ footer.socialLinks[instagram].url ↔ sites[paradis].social_links.url
+    payload: "https://www.instagram.com/paradis.labs_/"
+    hcms:    "https://www.instagram.com/paradis.labs"
+✗ homepage.hero.headline (en-US) ↔ home → block_hero.title
+    payload: "We Build Digital Products That Move Businesses Forward"
+    hcms:    "[EXEMPLO] We design and build digital products"
+✗ homepage.hero.headline (pt-AO) ↔ home → block_hero.title
+    payload: (vazio)
+    hcms:    "[EXEMPLO] Desenhamos e construímos produtos digitais"
+✗ homepage.hero.description (en-US) ↔ home → block_hero.lead
+    payload: "We design and build software and UI/UX experiences for our own products and for ambitious companies."
+    hcms:    "[EXEMPLO] Replace with the live headline and description from Payload (hero collection)."
+✗ homepage.hero.description (pt-AO) ↔ home → block_hero.lead
+    payload: (vazio)
+    hcms:    "[EXEMPLO] Substituir pelo título e pela descrição reais (colecção hero no Payload)."
+✗ homepage.hero.primaryCta.url (pt-AO) ↔ home → block_hero.buttons[0].url
+    payload: "/get-quote"
+    hcms:    "/pt/pedir-orcamento"
+✗ homepage.services.title ↔ home → block_media_text #about-us.title
+    payload: "Crafting Digital Experiences That Blend Strategy, Design & Technology"
+    hcms:    "Our Services"
+✗ homepage.services.subtitle ↔ home → block_media_text #about-us.lead
+    payload: "At Paradis, we create impactful digital products through software development, UI/UX design, and product strategy. From concept to launch, we help businesses build experiences that connect, scale, and deliver real results."
+    hcms:    "[EXEMPLO] Replace with homepage.services.subtitle."
+✗ homepage.services.primaryCta.url (pt-AO) ↔ home → block_media_text #about-us.buttons[0].url
+    payload: "/get-quote"
+    hcms:    "/pt/pedir-orcamento"
+✗ homepage.services.ourServicesCT.backgroundVideo ↔ home → block_media_text #about-us.media
+    payload: "Circuit Board Technology Video.mp4"
+    hcms:    (vazio)
+✗ homepage.services.ourServicesCT.title (en-US) ↔ home → block_collection #services.title
+    payload: "Services Designed to Power Modern Digital Businesses"
+    hcms:    "What We Offer"
+✗ homepage.services.ourServicesCT.title (pt-AO) ↔ home → block_collection #services.title
+    payload: "What We Offer"
+    hcms:    "O que oferecemos"
+✗ homepage.services.ourServicesCT.description (en-US) ↔ home → block_collection #services.lead
+    payload: "From software development to UI/UX design, we build scalable digital solutions that help brands innovate, grow, and deliver better user experiences."
+    hcms:    "[EXEMPLO] Replace with ourServicesCT.description."
+✗ homepage.services.ourServicesCT.description (pt-AO) ↔ home → block_collection #services.lead
+    payload: ""
+    hcms:    "[EXEMPLO] Substituir por ourServicesCT.description."
+✗ homepage.services.items[api-integrations] ↔ offerings
+    só no Payload (sem par no hcms)
+✗ homepage.services.items[api-and-integrations] ↔ offerings[api-and-integrations]
+    só no hcms (sem par no Payload)
+✗ homepage.projects.title ↔ home → block_collection #products.title
+    payload: "Digital Products Built to Solve Real Problems"
+    hcms:    "View Our Work"
+✗ homepage.projects.subtitle ↔ home → block_collection #products.lead
+    payload: "We create innovative digital products focused on usability, performance, and real business impact. Designed to simplify experiences and help businesses grow smarter."
+    hcms:    (vazio)
+✗ homepage.projects.primaryCta.label (pt-AO) ↔ home → block_collection #products.buttons[0].label
+    payload: "View Our Work"
+    hcms:    "Ver todos"
+✗ homepage.projects.items[kitenda].description (en-US) ↔ projects[kitenda].summary
+    payload: "Smart Prepaid Card Load Calculator for Visa Angola"
+    hcms:    "[EXEMPLO] Short description of Kitenda. Replace with the live copy."
+✗ homepage.projects.items[kitenda].description (pt-AO) ↔ projects[kitenda].summary
+    payload: "Smart Prepaid Card Load Calculator for Visa Angola"
+    hcms:    "[EXEMPLO] Descrição curta de Kitenda. Substituir pelo texto real."
+✗ homepage.projects.items[kitenda].coverImage ↔ projects[kitenda].image
+    payload: "0978bb5a50eda022b7254964efa57e71f447a3e6-1.png"
+    hcms:    (vazio)
+✗ homepage.projects.items[ficha-segura].description (en-US) ↔ projects[ficha-segura].summary
+    payload: "The smart deposit simulator built for the Angolan market"
+    hcms:    "[EXEMPLO] Short description of Ficha Segura. Replace with the live copy."
+✗ homepage.projects.items[ficha-segura].description (pt-AO) ↔ projects[ficha-segura].summary
+    payload: "The smart deposit simulator built for the Angolan market"
+    hcms:    "[EXEMPLO] Descrição curta de Ficha Segura. Substituir pelo texto real."
+✗ homepage.projects.items[ficha-segura].coverImage ↔ projects[ficha-segura].image
+    payload: "cd30c860fd43fb03da54363c33ce7ed9aa43c038-1.png"
+    hcms:    (vazio)
+✗ homepage.testimonials.title ↔ home → block_collection #testimonials.title
+    payload: "Built for Businesses. Loved by Users."
+    hcms:    "Testimonials"
+✗ homepage.testimonials.subtitle ↔ home → block_collection #testimonials.lead
+    payload: "From software solutions to digital products, we create experiences people \nenjoy using every day."
+    hcms:    (vazio)
+✗ homepage.testimonials.items ↔ testimonials
+    0 itens visíveis ao token de leitura no hcms (o Payload tem 2)
+✗ homepage.faqs.subtitle ↔ home → block_collection #faqs.lead
+    payload: "Find quick answers about our services, products, and how we work with clients."
+    hcms:    (vazio)
+✗ homepage.faqs.items ↔ faqs
+    0 itens visíveis ao token de leitura no hcms (o Payload tem 4)
+✗ quotePage.seo.metaTitle (en-US) ↔ pages[contact].seo_title
+    payload: "Get Quote"
+    hcms:    "Get a Quote — Paradis"
+✗ quotePage.form.emailLabel (en-US) ↔ forms[quote_request].fields[email].label
+    payload: "Your Email"
+    hcms:    "Your email"
+✗ quotePage.form.interests[api-integrations] ↔ offerings
+    só no Payload (sem par no hcms)
+✗ quotePage.form.interests[api-and-integrations] ↔ offerings[api-and-integrations]
+    só no hcms (sem par no Payload)
+
+## O hcms acrescenta o que o Payload não tinha (não conta como falha) — 74
++ navbar.links[home].label (pt-AO) — "Início"
++ navbar.links[about us].label (pt-AO) — "Sobre nós"
++ navbar.links[services].label (pt-AO) — "Serviços"
++ navbar.buttons[get quote].label (pt-AO) — "Pedir orçamento"
++ footer.tagline (pt-AO) — "Porque nascemos para isto"
++ footer.email — "geral@paradis.host"
++ footer.directContact.reachHeading (pt-AO) — "Fale connosco directamente"
++ footer.directContact.emailHeading (pt-AO) — "E-mail"
++ footer.directContact.socialHeading (pt-AO) — "Noutros sítios"
++ footer.linkGroups[quick links].title (pt-AO) — "Atalhos"
++ footer.linkGroups[company].title (pt-AO) — "Empresa"
++ footer.linkGroups[products].title (pt-AO) — "Produtos"
++ footer.links[quick links › home].name (pt-AO) — "Início"
++ footer.links[quick links › products].name (pt-AO) — "Produtos"
++ footer.links[quick links › services].name (pt-AO) — "Serviços"
++ footer.links[quick links › kitenda].name (pt-AO) — "Kitenda"
++ footer.links[quick links › ficha segura].name (pt-AO) — "Ficha Segura"
++ footer.links[company › company].name (pt-AO) — "Empresa"
++ footer.links[company › members].name (pt-AO) — "Membros"
++ footer.links[company › contacts].name (pt-AO) — "Contactos"
++ footer.links[products › kitenda].name (pt-AO) — "Kitenda"
++ footer.links[products › ficha segura].name (pt-AO) — "Ficha Segura"
++ footer.cta.heading (en-US) — "Ready to build?"
++ footer.cta.heading (pt-AO) — "Pronto para construir?"
++ footer.cta.outlineButton.label (pt-AO) — "Agendar uma chamada"
++ homepage.hero.primaryCta.label (pt-AO) — "Pedir orçamento - Grátis"
++ homepage.hero.secondaryCta.label (pt-AO) — "Agendar uma chamada"
++ homepage.services.primaryCta.label (pt-AO) — "Pedir orçamento - Grátis"
++ homepage.services.items[ui-ux-design].title (pt-AO) — "Design UI/UX" (Payload: "UI/UX Design")
++ homepage.services.items[ui-ux-design].shortDescription (pt-AO) — "Desenhamos experiências digitais intuitivas e envolventes, que os utilizadores adoram." (Payload: "Designing intuitive and engaging digital experiences that users love.")
++ homepage.services.items[brand-identity].title (pt-AO) — "Identidade de marca" (Payload: "Brand Identity")
++ homepage.services.items[brand-identity].shortDescription (pt-AO) — "Criamos identidades visuais memoráveis que reforçam a presença da sua marca." (Payload: "Building memorable visual identities that elevate your brand presence.")
++ homepage.services.items[mobile-development].title (pt-AO) — "Desenvolvimento mobile" (Payload: "Mobile Development")
++ homepage.services.items[mobile-development].shortDescription (pt-AO) — "Criamos aplicações móveis rápidas, escaláveis e centradas no utilizador." (Payload: "Creating fast, scalable, and user-focused mobile applications.")
++ homepage.services.items[web-development].title (pt-AO) — "Desenvolvimento web" (Payload: "Web Development")
++ homepage.services.items[web-development].shortDescription (pt-AO) — "Desenvolvemos sites e plataformas web modernas, pensadas para o desempenho." (Payload: "Developing modern websites and web platforms built for performance.")
++ homepage.services.items[ai-solutions].title (pt-AO) — "Soluções de IA" (Payload: "AI Solutions")
++ homepage.services.items[ai-solutions].shortDescription (pt-AO) — "Soluções com inteligência artificial que automatizam e melhoram experiências digitais." (Payload: "AI-powered solutions that automate and enhance digital experiences.")
++ homepage.services.items[product-strategy].title (pt-AO) — "Estratégia de produto" (Payload: "Product Strategy")
++ homepage.services.items[product-strategy].shortDescription (pt-AO) — "Orientação estratégica para um crescimento digital e uma inovação mais inteligentes." (Payload: "Strategic guidance for smarter digital growth and innovation.")
++ quotePage.seo.metaTitle (pt-AO) — "Pedir orçamento — Paradis"
++ quotePage.seo.metaDescription (en-US) — "Tell us what you're building."
++ quotePage.seo.metaDescription (pt-AO) — "Conte-nos o que está a construir."
++ quotePage.hero.headline (pt-AO) — "Vamos construir algo\nque o faça avançar."
++ quotePage.hero.intro (pt-AO) — "Queremos saber o que está a construir. Deixe os detalhes abaixo e respondemos dentro de um dia útil."
++ quotePage.hero.availability.label (pt-AO) — "Disponíveis para novos projectos"
++ quotePage.hero.availability.location (pt-AO) — "Luanda, Angola"
++ quotePage.form.eyebrow (pt-AO) — "O BRIEFING"
++ quotePage.form.nameLabel (pt-AO) — "O seu nome"
++ quotePage.form.emailLabel (pt-AO) — "O seu e-mail"
++ quotePage.form.interestsLabel (pt-AO) — "Tenho interesse em…"
++ quotePage.form.messageLabel (pt-AO) — "Fale-nos do seu projecto"
++ quotePage.form.submitLabel (pt-AO) — "Enviar pedido"
++ quotePage.form.privacyNote (pt-AO) — "Os seus dados estão seguros — sem anúncios, sem spam."
++ quotePage.form.messages.success (en-US) — "Thanks — we've got your brief. We'll reply within one business day."
++ quotePage.form.messages.success (pt-AO) — "Obrigado — recebemos o seu briefing. Respondemos dentro de um dia útil."
++ quotePage.form.messages.error (en-US) — "Something went wrong sending your enquiry. Please try again."
++ quotePage.form.messages.error (pt-AO) — "Algo correu mal ao enviar o seu pedido. Tente novamente."
++ quotePage.form.messages.nameRequired (en-US) — "Please tell us your name."
++ quotePage.form.messages.nameRequired (pt-AO) — "Diga-nos o seu nome."
++ quotePage.form.messages.emailRequired (en-US) — "Please enter your email."
++ quotePage.form.messages.emailRequired (pt-AO) — "Indique o seu e-mail."
++ quotePage.form.messages.emailInvalid (en-US) — "That email doesn't look right."
++ quotePage.form.messages.emailInvalid (pt-AO) — "Esse e-mail não parece válido."
++ quotePage.form.messages.messageRequired (en-US) — "Please tell us about your project."
++ quotePage.form.messages.messageRequired (pt-AO) — "Fale-nos do seu projecto."
++ quotePage.form.messages.tooLong (en-US) — "That's a bit too long — please shorten it."
++ quotePage.form.messages.tooLong (pt-AO) — "É um pouco longo — encurte, por favor."
++ quotePage.form.interests[ui-ux-design].title (pt-AO) — "Design UI/UX" (Payload: "UI/UX Design")
++ quotePage.form.interests[brand-identity].title (pt-AO) — "Identidade de marca" (Payload: "Brand Identity")
++ quotePage.form.interests[mobile-development].title (pt-AO) — "Desenvolvimento mobile" (Payload: "Mobile Development")
++ quotePage.form.interests[web-development].title (pt-AO) — "Desenvolvimento web" (Payload: "Web Development")
++ quotePage.form.interests[ai-solutions].title (pt-AO) — "Soluções de IA" (Payload: "AI Solutions")
++ quotePage.form.interests[product-strategy].title (pt-AO) — "Estratégia de produto" (Payload: "Product Strategy")
+
+## Ordem diferente (não conta como falha) — 2
+ℹ navbar.links — Payload: home, about us, services · hcms: home, services, about us
+ℹ footer.socialLinks — Payload: linkedin, instagram · hcms: instagram, linkedin
+
+✗ 12 textos de exemplo · 0 traduções em falta · 42 diferenças (0 aceites) · 0 campos em falta · 0 exceções inválidas
