@@ -74,12 +74,12 @@ const ENV = ["CMS_URL", "TOKEN_SECRET_READ", "TOKEN_SECRET_FORM"] as const;
 function env(name: (typeof ENV)[number]): string {
   const value = process.env[name]?.trim();
   if (!value) {
-    throw new Error(`[content] CMS_PROVIDER=hcms exige ${name}`);
+    throw new Error(`[content] o hcms exige ${name}`);
   }
   return value;
 }
 
-/** Chamado por `@/content` no arranque, quando este provider é o escolhido. */
+/** Chamado por `@/content` ao carregar o módulo: sem estas variáveis, o site não arranca. */
 export function assertHcmsEnv() {
   for (const name of ENV) env(name);
 }

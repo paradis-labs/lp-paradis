@@ -1,6 +1,6 @@
 import Footer from "@/components/Footer";
 import { getFooter } from "@/content";
-import type { Locale } from "@/i18n/routing";
+import { requireLocale } from "@/i18n/require-locale";
 
 // O footer de toda rota que não tenha uma composição própria no slot `@footer`
 // — hoje `/`, as rotas de fixture, e qualquer rota futura que não se registe.
@@ -17,9 +17,9 @@ import type { Locale } from "@/i18n/routing";
 export default async function BaseFooter({
   params,
 }: {
-  params: Promise<{ locale: Locale }>;
+  params: Promise<{ locale: string }>;
 }) {
-  const { locale } = await params;
+  const locale = requireLocale((await params).locale);
   const footerData = await getFooter(locale);
 
   return <Footer {...footerData} locale={locale} />;

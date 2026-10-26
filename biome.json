@@ -40,14 +40,8 @@
             },
             "patterns": [
               {
-                "group": [
-                  "payload",
-                  "payload/**",
-                  "@payloadcms/**",
-                  "@payload-config",
-                  "**/payload-types"
-                ],
-                "message": "O site lê e grava conteúdo só por `@/content`. Os tipos de domínio estão em `@/content` (`src/content/types.ts`); o Payload só pode ser importado pelo provider (`src/content/providers/`), pelo próprio Payload (`src/collections/`, `src/payload.config.ts`, route group `(payload)`) e por `next.config.ts`. Ver `openspec/changes/cms-phase-0a-content-seam` — é esta costura que permite trocar de CMS sem tocar em componentes."
+                "group": ["@directus/sdk", "@directus/sdk/**"],
+                "message": "O site lê e grava conteúdo só por `@/content`. Os tipos de domínio estão em `@/content` (`src/content/types.ts`); o SDK do Directus só pode ser importado pelo provider (`src/content/providers/`) e pelos scripts do hcms (`cms/hcms/`). Ver `openspec/changes/cms-phase-0a-content-seam` — é esta costura que deixa o CMS atrás de uma só porta."
               }
             ]
           }
@@ -68,17 +62,7 @@
   },
   "overrides": [
     {
-      "includes": [
-        "src/content/providers/**",
-        "src/collections/**",
-        "src/payload.config.ts",
-        "src/app/(payload)/**",
-        "next.config.ts",
-        "payload-types.ts",
-        "cms/hcms/verify-content.ts",
-        "cms/hcms/import-submissions.ts",
-        "cms/payload/**"
-      ],
+      "includes": ["src/content/providers/**", "cms/hcms/**"],
       "linter": {
         "rules": {
           "style": {

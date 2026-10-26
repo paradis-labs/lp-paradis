@@ -1,5 +1,7 @@
 # Cutover: Payload → hcms
 
+> **Histórico.** O Payload saiu do site na fase 5 (`cms-phase-5-remove-payload`). `CMS_PROVIDER`, `PAYLOAD_READ_ONLY`, `cms:verify`, `cms:parity`, `cms:export-leads` e `cms:import-submissions` já não existem neste código; estão no git em `c7e1d20`. Fica como registo de como a troca foi planeada.
+
 Runbook da fase 4 de `migrate-cms-to-directus`. Leva o site de produção a ler e escrever no hcms (`hcms.paradis.host`), com o Payload congelado e intacto durante uma janela de rollback de 7 dias.
 
 O cutover é configuração, não deploy: o código das fases 0–3 já está em produção com `CMS_PROVIDER=payload`.

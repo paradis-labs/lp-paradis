@@ -1,16 +1,18 @@
-import { withPayload } from "@payloadcms/next/withPayload";
 import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
 
-// As imagens do hcms (`CMS_PROVIDER=hcms`) chegam como `${CMS_URL}/assets/<id>`
-// e passam pelo `next/image`, que só aceita hosts declarados. O default cobre
-// um build sem `CMS_URL` no ambiente.
+// As imagens do hcms chegam como `${CMS_URL}/assets/<id>/<nome>` e passam pelo
+// `next/image`, que só aceita hosts declarados. O default cobre um build sem
+// `CMS_URL` no ambiente.
 const cmsUrl = new URL(process.env.CMS_URL || "https://hcms.paradis.host");
 
 const nextConfig: NextConfig = {
   /* config options here */
   output: "standalone",
   reactCompiler: true,
+  // `"use cache"` nas leituras de `@/content` (fase 5). Muda o rendering da
+  // app: dados de runtime fora de `Suspense` passam a erro de build.
+  cacheComponents: true,
   images: {
     remotePatterns: [
       {
@@ -24,4 +26,4 @@ const nextConfig: NextConfig = {
 };
 
 const withNextIntl = createNextIntlPlugin();
-export default withNextIntl(withPayload(nextConfig));
+export default withNextIntl(nextConfig);

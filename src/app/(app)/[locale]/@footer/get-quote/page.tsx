@@ -1,6 +1,6 @@
 import Footer from "@/components/Footer";
 import { getContact, getFooter } from "@/content";
-import type { Locale } from "@/i18n/routing";
+import { requireLocale } from "@/i18n/require-locale";
 
 // O footer da página de orçamento: o mesmo componente das outras rotas, mais a
 // faixa de contacto direto. É esta folha do slot `@footer` que faz da faixa uma
@@ -19,9 +19,9 @@ import type { Locale } from "@/i18n/routing";
 export default async function GetQuoteFooter({
   params,
 }: {
-  params: Promise<{ locale: Locale }>;
+  params: Promise<{ locale: string }>;
 }) {
-  const { locale } = await params;
+  const locale = requireLocale((await params).locale);
 
   // Independentes uma da outra: nenhuma espera pela outra.
   const [footerData, contact] = await Promise.all([

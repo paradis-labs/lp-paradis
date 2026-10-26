@@ -1,5 +1,6 @@
 import type { LucideIcon } from "lucide-react";
 import { ArrowUpRight, Dribbble, Instagram, Linkedin } from "lucide-react";
+import { cacheLife } from "next/cache";
 import Image from "next/image";
 import Link from "next/link";
 import type React from "react";
@@ -105,6 +106,16 @@ const FALLBACK: Record<
     socialHeading: "Noutros sítios",
   },
 };
+
+// O ano do copyright é composto em runtime (`footer-content-authority`), mas a
+// página é pré-renderizada, e um `new Date()` solto é um valor instável que o
+// `cacheComponents` recusa. Fica num escopo cacheado que se revalida todos os
+// dias: o ano acompanha a virada no máximo um dia depois, sem JavaScript.
+async function CopyrightYear() {
+  "use cache";
+  cacheLife("days");
+  return new Date().getFullYear();
+}
 
 // `?? fallback` não basta: o Payload grava string vazia quando um campo de texto
 // é limpo no admin, e `"" ?? x` devolve `""`. Só-espaços também conta como
@@ -439,7 +450,7 @@ export default function Footer({
           className={`container py-8 ${FOOTER_GUTTER} flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between`}
         >
           <span className="text-sm font-normal">
-            &copy; {new Date().getFullYear()}{" "}
+            &copy; <CopyrightYear />{" "}
             {textOr(args.copyrightText, fallback.copyright)}
           </span>
           {socialLinks.length > 0 && (

@@ -1,6 +1,6 @@
-# hcms — o CMS de destino
+# hcms — o CMS do site
 
-O conteúdo deste site vai passar a vir do **hcms** (`hcms.paradis.host`), um Directus 11 **partilhado por vários sites** ("Paradis CMS"). O site "Paradis" já lá está modelado, com conteúdo em `en-US` e `pt-AO`. A migração e as suas fases estão em `openspec/changes/migrate-cms-to-directus/`.
+O conteúdo deste site vem do **hcms** (`hcms.paradis.host`), um Directus 11 **partilhado por vários sites** ("Paradis CMS"), com conteúdo em `en-US` e `pt-AO`. O modelo e o conteúdo de exemplo do site são do repositório `Template-multisite-tenant` (`tooling/seed/paradis.mjs`). A migração a partir do Payload está em `openspec/changes/migrate-cms-to-directus/`.
 
 > Instância partilhada: **este repositório nunca escreve no schema do hcms** (coleções, campos, políticas, Flows). O que faltar no modelo é pedido a quem o administra.
 
@@ -38,31 +38,8 @@ Confirma, só com leituras, que o hcms tem a forma de que o site depende: o site
 
 Corre com o Node diretamente (type stripping, Node ≥ 22.18) e lê o `.env` da raiz, se existir.
 
-## Verificar o conteúdo
+## Scripts da migração (arquivados)
 
-```sh
-npm run cms:verify
-npm run --silent cms:verify > cms/hcms/reports/AAAA-MM-DD.txt   # guardar o relatório
-```
+A verificação de conteúdo contra o Payload (`cms:verify`), a paridade entre os dois providers (`cms:parity`), a importação de submissões para rollback (`cms:import-submissions`) e a exportação das submissões antigas (`cms:export-leads`) usavam a Local API do Payload e saíram com ele na fase 5. Ficam no histórico do git, no commit `c7e1d20` (`cms/hcms/verify-content.ts`, `cms/hcms/import-submissions.ts`, `cms/parity/`, `cms/payload/`). Os relatórios da fase 2 continuam em `reports/`.
 
-Compara o conteúdo do hcms com o que o Payload serve hoje e sai com código 1 enquanto houver:
-
-1. **textos de exemplo**: qualquer campo traduzido com `[EXEMPLO]`. Nunca são aceitáveis;
-2. **traduções em falta**: campos preenchidos num idioma e vazios no outro;
-3. **diferenças face ao Payload**, campo a campo e por locale. Antes de comparar, normaliza os espaços, as aspas tipográficas, o rich text e o prefixo de locale dos URLs. As listas são emparelhadas por slug ou título, e uma ordem diferente aparece à parte, sem contar como falha;
-4. campos do mapeamento que não existem nos registos do hcms, e exceções inválidas.
-
-O que o hcms **acrescenta** e o Payload nunca teve (um valor vazio no Payload, ou o texto inglês copiado para `pt`) aparece numa secção própria e não conta como falha. É para isto que o Payload se lê sem fallback de locale.
-
-As diferenças intencionais entram por PR em `accepted-differences.json`:
-
-```json
-{
-  "differences": [{ "field": "quotePage.form.emailLabel", "locale": "en-US", "reason": "capitalização revista no hcms" }],
-  "pairs": [{ "list": "homepage.services.items", "payload": "api-integrations", "hcms": "api-and-integrations", "reason": "slug renomeado" }]
-}
-```
-
-`field` é o identificador que o relatório imprime. Sem `locale`, a exceção vale para os dois idiomas. `pairs` emparelha à mão itens de uma lista cuja identidade mudou. Uma exceção sobre um campo com `[EXEMPLO]` é rejeitada.
-
-**Só leitura nos dois CMS.** O hcms é lido com `TOKEN_SECRET_READ`. O Payload é lido pela Local API, só com `find`/`findGlobal` e com o `push` de schema do adaptador desligado. Corre com `payload run` (Local API e `.env` no mesmo processo). Os relatórios ficam em `reports/`.
+`cms:check` fica: só lê o hcms, e é a verificação permanente do contrato.
