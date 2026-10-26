@@ -1,12 +1,12 @@
 import Link from "next/link";
+import type { NavBar as NavBarContent } from "@/content";
 import type { Locale } from "@/i18n/routing";
 import { localizedHref } from "@/lib/locale-href";
-import type { PopulatedNavBar } from "@/service/types";
 import Button from "../Button";
 import { NavBar } from "../NavBar";
 import { NavActiveProvider } from "../NavBar/NavActiveContext";
 
-interface HeaderProps extends PopulatedNavBar {
+interface HeaderProps extends NavBarContent {
   locale: Locale;
 }
 
@@ -17,7 +17,7 @@ export default async function Header({ locale, ...args }: HeaderProps) {
   const logoWidth = args.logo?.width ?? 134;
   const logoHeight = args.logo?.height ?? 25;
 
-  const sectionIds = (args.links ?? [])
+  const sectionIds = args.links
     .map((link) => link.url)
     .filter((url): url is string => !!url?.includes("#"))
     .map((url) => url.split("#")[1]);
@@ -38,29 +38,27 @@ export default async function Header({ locale, ...args }: HeaderProps) {
           logoHeight={logoHeight}
         >
           <NavBar.ItemList>
-            {args.links &&
-              args.links.length > 0 &&
-              args.links.map((link) => (
-                <NavBar.Item
-                  key={link.id ?? link.url}
-                  href={link.url}
-                  locale={locale}
-                  openInNewTab={link.openInNewTab ?? false}
-                >
-                  {link.label}
-                </NavBar.Item>
-              ))}
+            {args.links.map((link) => (
+              <NavBar.Item
+                key={link.key}
+                href={link.url}
+                locale={locale}
+                openInNewTab={link.openInNewTab}
+              >
+                {link.label}
+              </NavBar.Item>
+            ))}
           </NavBar.ItemList>
           <NavBar.ButtonWrap>
-            <NavBar.LocaleSwitch className="px-2 py-2" />
-            {args.buttons?.map((btn) => {
-              if (!btn.url?.trim()) {
+            <NavBar.LocaleSwitch className="px-2 py-2" locale={locale} />
+            {args.buttons.map((btn) => {
+              if (!btn.url.trim()) {
                 return (
                   <Button
-                    key={btn.id ?? btn.label}
+                    key={btn.key}
                     size="sm"
                     className={btn.variant === "outline" ? "bg-white" : ""}
-                    variant={btn.variant ?? "primary"}
+                    variant={btn.variant}
                   >
                     {btn.label}
                   </Button>
@@ -69,11 +67,11 @@ export default async function Header({ locale, ...args }: HeaderProps) {
 
               return (
                 <Button
-                  key={btn.id ?? btn.label}
+                  key={btn.key}
                   asChild
                   size="sm"
                   className={btn.variant === "outline" ? "bg-white" : ""}
-                  variant={btn.variant ?? "primary"}
+                  variant={btn.variant}
                 >
                   {/* UM único filho: restrição do `Slot` usado pelo `asChild`. */}
                   <Link

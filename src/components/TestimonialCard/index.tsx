@@ -10,8 +10,8 @@ import {
 import { Globe } from "lucide-react";
 import Image from "next/image";
 import type { ComponentType, SVGProps } from "react";
+import type { Testimonial } from "@/content";
 import type { Locale } from "@/i18n/routing";
-import type { Testimonial } from "../../../payload-types";
 
 type IconComponent = ComponentType<{ className?: string }>;
 
@@ -70,11 +70,7 @@ export default function TestimonialCard({
     <div className=" p-6 flex flex-col gap-4 w-full rounded-[20px] bg-white/3 shadow-xl/5 border-3 border-white/10">
       <div className="w-full flex flex-row gap-2.5">
         <Image
-          src={
-            (typeof testimonial.avatar === "object" &&
-              testimonial.avatar?.url) ||
-            ""
-          }
+          src={testimonial.avatar?.url ?? ""}
           alt={`avatar ${testimonial.authorName}`}
           width={34}
           height={34}
@@ -96,7 +92,7 @@ export default function TestimonialCard({
         {testimonial.quote}
       </div>
       <div className="flex flex-col w-full text-white/56">
-        {formatTestimonialDate(testimonial.updatedAt, locale)}
+        {formatTestimonialDate(testimonial.date, locale)}
       </div>
     </div>
   );

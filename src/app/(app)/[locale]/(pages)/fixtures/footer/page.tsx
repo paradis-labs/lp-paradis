@@ -1,20 +1,42 @@
 import { notFound } from "next/navigation";
 import type React from "react";
 import Footer from "@/components/Footer";
+import type { FooterContactBand, Footer as FooterContent } from "@/content";
 import type { Locale } from "@/i18n/routing";
-import type { FooterContactBand, PopulatedFooter } from "@/service/types";
 
+// O global inteiro vazio, na forma de domínio: textos a `null`, listas vazias.
+// É o que o provider entrega quando o editor não preencheu nada — já não há
+// cast de `{}`, porque o tipo de domínio não tem campos opcionais por omissão.
+const EMPTY_GLOBAL: FooterContent = {
+  logo: null,
+  tagline: null,
+  directContact: {
+    reachHeading: null,
+    emailHeading: null,
+    socialHeading: null,
+  },
+  linkGroups: [],
+  cta: {
+    heading: null,
+    primaryButton: { label: null, href: null },
+    outlineButton: { label: null, href: null },
+  },
+  copyrightText: null,
+  socialLinks: [],
+};
 
-const BASE: PopulatedFooter = {
-  id: 1,
+const BASE: FooterContent = {
+  ...EMPTY_GLOBAL,
   tagline: "Because we were born into this world",
   linkGroups: [
     {
+      key: "g1",
       title: "Quick Links",
       links: [
-        { name: "Home", href: "/", isExternal: false },
-        { name: "Services", href: "/#services", isExternal: false },
+        { key: "k1", name: "Home", href: "/", isExternal: false },
+        { key: "k2", name: "Services", href: "/#services", isExternal: false },
         {
+          key: "k3",
           name: "Kitenda",
           href: "https://kitenda.paradis.host/",
           isExternal: true,
@@ -30,6 +52,7 @@ const BASE: PopulatedFooter = {
   copyrightText: "Paradis Labs - All rights reserved.",
   socialLinks: [
     {
+      key: "s1",
       platform: "linkedin",
       url: "https://www.linkedin.com/company/paradis-labs",
       label: "Paradis Labs on LinkedIn",
@@ -37,21 +60,21 @@ const BASE: PopulatedFooter = {
   ],
 };
 
-
-const EMPTY_GLOBAL = {} as PopulatedFooter;
-
-const THREE_SOCIALS: NonNullable<PopulatedFooter["socialLinks"]> = [
+const THREE_SOCIALS: FooterContent["socialLinks"] = [
   {
+    key: "s2",
     platform: "instagram",
     url: "https://www.instagram.com/paradis.labs",
     label: "Paradis Labs on Instagram",
   },
   {
+    key: "s3",
     platform: "linkedin",
     url: "https://www.linkedin.com/company/paradis-labs",
     label: "Paradis Labs on LinkedIn",
   },
   {
+    key: "s4",
     platform: "dribbble",
     url: "https://dribbble.com/paradislabs",
     label: "Paradis Labs on Dribbble",
@@ -62,8 +85,7 @@ const CASES: Array<{
   scenario: string;
   prop: string;
   expected: string;
-  args: PopulatedFooter;
-
+  args: FooterContent;
   contactBand?: FooterContactBand;
 }> = [
   {
@@ -85,7 +107,7 @@ const CASES: Array<{
   },
   {
     scenario: "Global inteiro sem conteúdo",
-    prop: "{} — nenhum campo (ver o cast acima)",
+    prop: "EMPTY_GLOBAL — textos a null, listas vazias",
     expected:
       "renderiza sem lançar erro, exibindo os fallbacks de cada campo, e o layout da página permanece íntegro",
     args: EMPTY_GLOBAL,
@@ -106,6 +128,7 @@ const CASES: Array<{
       ...BASE,
       socialLinks: [
         {
+          key: "s5",
           platform: "youtube",
           url: "https://www.youtube.com/@paradislabs",
           label: "Paradis Labs on YouTube",
@@ -183,6 +206,7 @@ const CASES: Array<{
       socialLinks: [
         ...THREE_SOCIALS,
         {
+          key: "s6",
           platform: "other",
           url: "https://paradis.host",
           label: "Paradis Labs elsewhere",
@@ -231,7 +255,6 @@ export default async function FooterFixturePage({
 }: {
   params: Promise<{ locale: string }>;
 }) {
-
   if (process.env.NODE_ENV !== "development") {
     notFound();
   }

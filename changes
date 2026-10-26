@@ -1,0 +1,13 @@
+Ordem	Change	Fecha	Tarefas (feitas/total)
+já	fix-quote-requests-public-create	escrita pública na API de quote-requests	6/8
+já	fix-wave-0-independent-issues (3 PRs: A navegação, B /get-quote, C footer/cards)	#13 #16 #17 #18 #19 #20 #21 #22A	13/21
+antes da 0a	fix-footer-slot-soft-navigation	#14	7/13
+0a	cms-phase-0a-content-seam	#8 #4 #3	19/23
+0b	cms-phase-0b-content-cache	#15	14/18
+1 ∥ 0a/0b	cms-phase-1-hcms-alignment	#22B (no modelo)	12/14
+2 ∥ 0a/0b	cms-phase-2-content-verification	conteúdo do hcms completo e igual ao do Payload	11/13
+3	cms-phase-3-directus-provider	#22B (no site)	17/23
+independente	localize-ui-copy-and-services-grid	inglês em /pt vindo do código; grelha de serviços por slug	12/12
+4	cms-phase-4-cutover	troca de provider em produção	5/18
+5	cms-phase-5-remove-payload	remoção do Payload (branch chore/cms-phase-5-remove-payload)	17/26
+roadmap	migrate-cms-to-directus	índice das fases 0a–5	0/12

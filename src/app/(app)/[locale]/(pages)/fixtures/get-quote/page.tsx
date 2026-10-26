@@ -1,20 +1,46 @@
 import { notFound } from "next/navigation";
 import type React from "react";
 import GetQuote from "@/components/GetQuote";
+import type { QuotePage, Service } from "@/content";
 import type { Locale } from "@/i18n/routing";
-import type { PopulatedGetQuotePage } from "@/service/types";
 
+const service = (slug: string, title: string): Service => ({
+  key: slug,
+  slug,
+  title,
+  shortDescription: null,
+});
 
+// A global inteira vazia, na forma de domínio: textos a `null`, listas vazias e
+// as duas válvulas ligadas — é só `false` explícito que as desliga, e um global
+// por preencher não tem `false` nenhum.
+const EMPTY_GLOBAL: QuotePage = {
+  seo: { metaTitle: null, metaDescription: null },
+  hero: { headline: null, intro: null },
+  availability: { enabled: true, label: null, location: null },
+  form: {
+    enabled: true,
+    eyebrow: null,
+    nameLabel: null,
+    emailLabel: null,
+    interestsLabel: null,
+    interests: [],
+    messageLabel: null,
+    submitLabel: null,
+    privacyNote: null,
+    messages: {
+      success: null,
+      error: null,
+      nameRequired: null,
+      emailRequired: null,
+      emailInvalid: null,
+      messageRequired: null,
+      tooLong: null,
+    },
+  },
+};
 
-type Interests = NonNullable<
-  NonNullable<PopulatedGetQuotePage["form"]>["interests"]
->;
-
-const service = (slug: string, title: string) =>
-  ({ slug, title }) as Interests[number];
-
-const BASE: PopulatedGetQuotePage = {
-  id: 1,
+const BASE: QuotePage = {
   seo: {
     metaTitle: "Get a Quote — Paradis",
     metaDescription: "Tell us what you're building.",
@@ -56,17 +82,15 @@ const BASE: PopulatedGetQuotePage = {
   },
 };
 
-const EMPTY_GLOBAL = {} as PopulatedGetQuotePage;
-
 const CASES: Array<{
   scenario: string;
   prop: string;
   expected: string;
-  args: PopulatedGetQuotePage;
+  args: QuotePage;
 }> = [
   {
     scenario: "Global inteira sem conteúdo",
-    prop: "{} — nenhum campo (ver o cast acima)",
+    prop: "EMPTY_GLOBAL — textos a null, listas vazias",
     expected:
       "renderiza sem lançar erro, com o piso de cada campo, e o layout permanece íntegro — headline, intro, pill e formulário todos presentes",
     args: EMPTY_GLOBAL,

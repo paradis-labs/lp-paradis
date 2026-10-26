@@ -1,7 +1,6 @@
 "use client";
 import { ArrowRight } from "@solar-icons/react";
 import Image from "next/image";
-import Link from "next/link";
 import { cn } from "@/lib/utils";
 
 export interface CardProps {
@@ -20,6 +19,8 @@ export interface CardProps {
   anchor: {
     label: string;
     href: string;
+    /** Anunciado só a leitores de ecrã, já localizado por quem chama. */
+    newTabHint: string;
   };
 }
 
@@ -53,13 +54,21 @@ export default function Card({
           <h3 className="text-sm">{title}</h3>
           <p className="text-2xl font-medium">{description}</p>
         </div>
-        <Link
+        {/* `<a>` e não `next/link`: o destino é o site do projecto, fora deste,
+            e o prefetch e o roteamento de cliente do `Link` não se aplicam a
+            uma URL absoluta. Abre sempre noutra aba — o visitante não perde a
+            página (#22). `noopener` impede o destino de alcançar o nosso
+            `window` por `window.opener`. */}
+        <a
           href={anchor.href}
+          target="_blank"
+          rel="noopener noreferrer"
           className="flex items-center gap-4 hover:underline underline-offset-8"
         >
           {anchor.label}
-          <ArrowRight width={24} />
-        </Link>
+          <span className="sr-only"> {anchor.newTabHint}</span>
+          <ArrowRight width={24} aria-hidden="true" />
+        </a>
       </div>
     </div>
   );

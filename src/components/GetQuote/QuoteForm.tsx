@@ -63,7 +63,6 @@ export default function QuoteForm({
 
   const [selected, setSelected] = useState<string[]>([]);
 
-
   const [clientErrors, setClientErrors] = useState<FieldErrors>({});
 
   const serverErrors: FieldErrors =
@@ -99,7 +98,6 @@ export default function QuoteForm({
 
     setClientErrors({});
   }
-
 
   if (state.status === "success") {
     return (
@@ -183,22 +181,23 @@ export default function QuoteForm({
             {interests.map((interest) => {
               const isSelected = selected.includes(interest.slug);
               return (
-                <button
+                <Button
                   key={interest.slug}
                   type="button"
+                  variant="pill"
+                  size="none"
+                  textSwap
                   onClick={() => toggleInterest(interest.slug)}
                   aria-pressed={isSelected}
-                  data-cursor="hover"
-                  className={cn(
-                    "inline-flex cursor-pointer items-center gap-2 rounded-full border px-5 py-3 text-base transition-colors",
-                    isSelected
-                      ? "border-primary bg-primary text-white"
-                      : "border-secondary text-primary hover:border-primary",
-                  )}
+                  className="px-5 py-3"
                 >
-                  <span aria-hidden="true">{isSelected ? "−" : "+"}</span>
-                  {interest.title}
-                </button>
+                  {/* Um só filho: o `textSwap` duplica o rótulo para o deslize,
+                      e o par sinal + título tem de viajar junto. */}
+                  <span className="inline-flex items-center gap-2">
+                    <span aria-hidden="true">{isSelected ? "−" : "+"}</span>
+                    {interest.title}
+                  </span>
+                </Button>
               );
             })}
           </div>
@@ -237,7 +236,15 @@ export default function QuoteForm({
       <div className="mt-14 flex flex-col items-start gap-6 sm:flex-row sm:items-center sm:gap-8">
         {/* `disabled` durante a submissão é o que impede o duplo clique de criar
             dois documentos. */}
-        <Button type="submit" variant="primary" size="lg" disabled={isPending} shine className="border-2 " >
+        {/* O `ShineBorder` é o único aro: um `border` estático por cima dele
+            competia com o gradiente e lia-se como "a border toda anima" (#19). */}
+        <Button
+          type="submit"
+          variant="primary"
+          size="lg"
+          disabled={isPending}
+          shine
+        >
           {labels.submit}
         </Button>
         <p className="text-sm text-neutral-400">{labels.privacyNote}</p>

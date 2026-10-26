@@ -1,14 +1,25 @@
 import type { LucideIcon } from "lucide-react";
 import { ArrowUpRight, Dribbble, Instagram, Linkedin } from "lucide-react";
+import { cacheLife } from "next/cache";
 import Image from "next/image";
 import Link from "next/link";
 import type React from "react";
+import type {
+  FooterContactBand,
+  Footer as FooterContent,
+  FooterSocialLink,
+} from "@/content";
 import type { Locale } from "@/i18n/routing";
 import { localizedCtaHref } from "@/lib/locale-href";
-import type { FooterContactBand, PopulatedFooter } from "@/service/types";
 import CalendlyCta from "../CalendlyCta";
 
-type SocialLink = NonNullable<PopulatedFooter["socialLinks"]>[number];
+type SocialLink = FooterSocialLink;
+
+// O gutter lateral dos três blocos do footer, num só sítio (#21). Cresce até ao
+// `px-14` das secções da home a partir de `lg`; abaixo disso os 56px deixariam
+// ~200px de conteúdo num ecrã de 320px. Em `xl` cai para zero: o `max-width` do
+// `container` (1280px) já afasta o conteúdo das margens.
+const FOOTER_GUTTER = "px-6 sm:px-10 lg:px-14 xl:px-0";
 
 // Só as três plataformas que o mockup pede. O conjunto é fechado em código de
 // propósito: um mapa aberto sobre um namespace (`Icons[nome]` em cima de um
@@ -55,17 +66,56 @@ const SOCIAL_NAMES: Partial<Record<SocialLink["platform"], string>> = {
 // substituiria por nada. Um botão sem rótulo é regressão pior que um botão em
 // inglês numa página em português. `cta.heading` está `null` em produção hoje,
 // então este piso é exercitado no primeiro render, não é precaução teórica.
-const FALLBACK = {
-  logoUrl: "/logo-white.svg",
-  logoAlt: "Paradis Logo",
-  tagline: "Because we were born into this world",
-  ctaHeading: "Ready to build?",
-  primaryLabel: "Get Quote - For Free",
-  outlineLabel: "Schedule a Call",
-  copyright: "Paradis.Labs - All rights reserved.",
-  reachHeading: "Reach Us Directly",
-  socialHeading: "Elsewhere",
+//
+// Um piso por idioma, e não um piso só em inglês: o tipo obriga a escrever os
+// dois, e um campo vazio em `/pt` cai em português. As cópias `pt` seguem o
+// texto que os editores puseram no hcms.
+const FALLBACK_LOGO_URL = "/logo-white.svg";
+
+const FALLBACK: Record<
+  Locale,
+  {
+    logoAlt: string;
+    tagline: string;
+    ctaHeading: string;
+    primaryLabel: string;
+    outlineLabel: string;
+    copyright: string;
+    reachHeading: string;
+    socialHeading: string;
+  }
+> = {
+  en: {
+    logoAlt: "Paradis Logo",
+    tagline: "Because we were born into this world",
+    ctaHeading: "Ready to build?",
+    primaryLabel: "Get Quote - For Free",
+    outlineLabel: "Schedule a Call",
+    copyright: "Paradis.Labs - All rights reserved.",
+    reachHeading: "Reach Us Directly",
+    socialHeading: "Elsewhere",
+  },
+  pt: {
+    logoAlt: "Logótipo da Paradis",
+    tagline: "Porque nascemos para isto",
+    ctaHeading: "Pronto para construir?",
+    primaryLabel: "Pedir orçamento - Grátis",
+    outlineLabel: "Agendar uma chamada",
+    copyright: "Paradis Labs - Todos os direitos reservados.",
+    reachHeading: "Fale connosco directamente",
+    socialHeading: "Noutros sítios",
+  },
 };
+
+// O ano do copyright é composto em runtime (`footer-content-authority`), mas a
+// página é pré-renderizada, e um `new Date()` solto é um valor instável que o
+// `cacheComponents` recusa. Fica num escopo cacheado que se revalida todos os
+// dias: o ano acompanha a virada no máximo um dia depois, sem JavaScript.
+async function CopyrightYear() {
+  "use cache";
+  cacheLife("days");
+  return new Date().getFullYear();
+}
 
 // `?? fallback` não basta: o Payload grava string vazia quando um campo de texto
 // é limpo no admin, e `"" ?? x` devolve `""`. Só-espaços também conta como
@@ -218,18 +268,23 @@ function SocialPill({ social }: { social: SocialLink }) {
 function ContactBand({
   contactBand,
   socialLinks,
+  locale,
 }: {
   contactBand: FooterContactBand;
   socialLinks: SocialLink[];
+  locale: Locale;
 }) {
   const email = contactBand.email?.trim();
+  const fallback = FALLBACK[locale];
 
   return (
-    <div className="container px-4 xl:px-0 py-14 flex flex-col gap-10 border-b border-white/20 sm:flex-row sm:items-start sm:justify-between">
+    <div
+      className={`container ${FOOTER_GUTTER} py-14 flex flex-col gap-10 border-b border-white/20 sm:flex-row sm:items-start sm:justify-between`}
+    >
       {email && (
         <div className="flex flex-col gap-4">
           <span className="text-white/70 font-medium text-sm">
-            {textOr(contactBand.reachHeading, FALLBACK.reachHeading)}
+            {textOr(contactBand.reachHeading, fallback.reachHeading)}
           </span>
           {/* `mailto:` não é rota, então não passa pelo `FooterHref`: não leva
               prefixo de locale e não é um `Link`. */}
@@ -245,13 +300,13 @@ function ContactBand({
       {socialLinks.length > 0 && (
         <div className="flex flex-col gap-4 sm:items-end">
           <span className="text-white/70 font-medium text-sm">
-            {textOr(contactBand.socialHeading, FALLBACK.socialHeading)}
+            {textOr(contactBand.socialHeading, fallback.socialHeading)}
           </span>
           {/* `flex-wrap` porque três pills com rótulo não cabem numa linha de
               ~390px, e a alternativa seria rolagem horizontal no footer. */}
           <ul className="flex flex-row flex-wrap items-center gap-3 sm:justify-end">
             {socialLinks.map((social) => (
-              <li key={social.id ?? social.url}>
+              <li key={social.key}>
                 <SocialPill social={social} />
               </li>
             ))}
@@ -283,12 +338,13 @@ export default function Footer({
   locale,
   contactBand,
   ...args
-}: PopulatedFooter & {
+}: FooterContent & {
   locale: Locale;
   contactBand?: FooterContactBand;
 }) {
   const cta = args.cta;
-  const socialLinks = args.socialLinks ?? [];
+  const socialLinks = args.socialLinks;
+  const fallback = FALLBACK[locale];
 
   // A faixa inteira cai quando não tem nenhum dos dois grupos — incluindo o
   // divider, que sozinho separaria nada de nada.
@@ -299,63 +355,60 @@ export default function Footer({
   return (
     <footer className="w-full flex flex-col justify-center items-center bg-primary text-white">
       {showBand && contactBand && (
-        <ContactBand contactBand={contactBand} socialLinks={socialLinks} />
+        <ContactBand
+          contactBand={contactBand}
+          socialLinks={socialLinks}
+          locale={locale}
+        />
       )}
-      <div className="container py-16 flex flex-col gap-10 px-4 xl:px-0">
+      <div className={`container py-16 flex flex-col gap-10 ${FOOTER_GUTTER}`}>
         <div className="flex flex-col gap-2">
           <Image
-            src={args.logo?.url ?? FALLBACK.logoUrl}
-            alt={args.logo?.alt ?? FALLBACK.logoAlt}
+            src={args.logo?.url ?? FALLBACK_LOGO_URL}
+            alt={args.logo?.alt ?? fallback.logoAlt}
             width={163}
             height={31}
           />
           <span className="block text-xs font-normal text-white/80">
-            {textOr(args.tagline, FALLBACK.tagline)}
+            {textOr(args.tagline, fallback.tagline)}
           </span>
         </div>
         <div className="w-full flex flex-row gap-10">
           <div className="w-full sm:grid sm:grid-cols-8 gap-6 flex flex-col">
-            {args.linkGroups &&
-              args.linkGroups.length > 0 &&
-              args.linkGroups.map((group) => (
-                <div
-                  className="col-span-2 flex flex-col gap-3"
-                  key={group.id ?? group.title}
-                >
-                  <span className="text-white/70 font-medium text-sm">
-                    {group.title}
-                  </span>
-                  <ul className="flex flex-col gap-2">
-                    {group.links &&
-                      group.links.length > 0 &&
-                      group.links.map((link) => (
-                        <li key={link.id ?? link.name}>
-                          <FooterHref
-                            href={link.href}
-                            external={link.isExternal ?? false}
-                            locale={locale}
-                            data-cursor="hover"
-                            className="inline-flex items-center gap-1 text-sm font-normal text-white"
-                          >
-                            {link.name}
-                            {link.isExternal && (
-                              // Decoração: o nome acessível do link é o rótulo
-                              // authorado, sem sufixo vindo da seta.
-                              <ArrowUpRight
-                                aria-hidden="true"
-                                className="size-3.5 shrink-0"
-                              />
-                            )}
-                          </FooterHref>
-                        </li>
-                      ))}
-                  </ul>
-                </div>
-              ))}
+            {args.linkGroups.map((group) => (
+              <div className="col-span-2 flex flex-col gap-3" key={group.key}>
+                <span className="text-white/70 font-medium text-sm">
+                  {group.title}
+                </span>
+                <ul className="flex flex-col gap-2">
+                  {group.links.map((link) => (
+                    <li key={link.key}>
+                      <FooterHref
+                        href={link.href}
+                        external={link.isExternal}
+                        locale={locale}
+                        data-cursor="hover"
+                        className="inline-flex items-center gap-1 text-sm font-normal text-white"
+                      >
+                        {link.name}
+                        {link.isExternal && (
+                          // Decoração: o nome acessível do link é o rótulo
+                          // authorado, sem sufixo vindo da seta.
+                          <ArrowUpRight
+                            aria-hidden="true"
+                            className="size-3.5 shrink-0"
+                          />
+                        )}
+                      </FooterHref>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
           </div>
           <div className="flex flex-col gap-4">
             <span className="text-white font-medium text-lg">
-              {textOr(cta?.heading, FALLBACK.ctaHeading)}
+              {textOr(cta?.heading, fallback.ctaHeading)}
             </span>
             <div className="flex flex-col gap-3 w-full xl:min-w-74">
               {/* Estes dois deixaram de usar `asChild` + `FooterHref`.
@@ -376,14 +429,14 @@ export default function Footer({
                 variant="inverted"
                 href={localizedCtaHref(cta?.primaryButton?.href, locale)}
               >
-                {textOr(cta?.primaryButton?.label, FALLBACK.primaryLabel)}
+                {textOr(cta?.primaryButton?.label, fallback.primaryLabel)}
               </CalendlyCta>
               <CalendlyCta
                 className="w-full"
                 variant="outline-inverted"
                 href={localizedCtaHref(cta?.outlineButton?.href, locale)}
               >
-                {textOr(cta?.outlineButton?.label, FALLBACK.outlineLabel)}
+                {textOr(cta?.outlineButton?.label, fallback.outlineLabel)}
               </CalendlyCta>
             </div>
           </div>
@@ -393,15 +446,17 @@ export default function Footer({
         {/* Empilha em telas estreitas: o copyright e três ícones não cabem na
             mesma linha em ~390px, e o mockup só define o comportamento
             desktop. */}
-        <div className="container py-8 px-4 xl:px-0 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div
+          className={`container py-8 ${FOOTER_GUTTER} flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between`}
+        >
           <span className="text-sm font-normal">
-            &copy; {new Date().getFullYear()}{" "}
-            {textOr(args.copyrightText, FALLBACK.copyright)}
+            &copy; <CopyrightYear />{" "}
+            {textOr(args.copyrightText, fallback.copyright)}
           </span>
           {socialLinks.length > 0 && (
             <ul className="flex flex-row items-center gap-4">
               {socialLinks.map((social) => (
-                <li key={social.id ?? social.url}>
+                <li key={social.key}>
                   <SocialIconLink social={social} />
                 </li>
               ))}

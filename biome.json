@@ -37,7 +37,13 @@
                 "importNames": ["useReducedMotion"],
                 "message": "Use `useReducedMotion` de `@/lib/use-reduced-motion`. O hook do `motion` le a preferencia dentro de um inicializador de `useState`, e o valor difere entre servidor (`null`) e cliente sob `prefers-reduced-motion` (`true`) — divergencia de hidratacao em toda carga com a preferencia ativa. Ver a invariante em `openspec/specs/hydration-integrity`. Preferencia que so muda apresentacao vai para CSS; a que muda comportamento vai para o hook do projeto."
               }
-            }
+            },
+            "patterns": [
+              {
+                "group": ["@directus/sdk", "@directus/sdk/**"],
+                "message": "O site lê e grava conteúdo só por `@/content`. Os tipos de domínio estão em `@/content` (`src/content/types.ts`); o SDK do Directus só pode ser importado pelo provider (`src/content/providers/`) e pelos scripts do hcms (`cms/hcms/`). Ver `openspec/changes/cms-phase-0a-content-seam` — é esta costura que deixa o CMS atrás de uma só porta."
+              }
+            ]
           }
         }
       }
@@ -53,5 +59,27 @@
         "organizeImports": "on"
       }
     }
-  }
+  },
+  "overrides": [
+    {
+      "includes": ["src/content/providers/**", "cms/hcms/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "paths": {
+                  "motion/react": {
+                    "importNames": ["useReducedMotion"],
+                    "message": "Use `useReducedMotion` de `@/lib/use-reduced-motion`. O hook do `motion` le a preferencia dentro de um inicializador de `useState`, e o valor difere entre servidor (`null`) e cliente sob `prefers-reduced-motion` (`true`) — divergencia de hidratacao em toda carga com a preferencia ativa. Ver a invariante em `openspec/specs/hydration-integrity`. Preferencia que so muda apresentacao vai para CSS; a que muda comportamento vai para o hook do projeto."
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
 }

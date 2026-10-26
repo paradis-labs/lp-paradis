@@ -29,6 +29,10 @@ const buttonVariants = cva(
         link: "p-0 gap-2.5 rounded-none text-current hover:underline",
         // botão-ícone (hambúrguer):
         icon: "rounded-md text-neutral-600 hover:text-primary",
+        // controlo de alternância (pills de interesse de `/get-quote`). O estado
+        // vem de `aria-pressed`, não de uma prop: é o mesmo atributo que o leitor
+        // de ecrã anuncia, e assim aparência e semântica não podem divergir.
+        pill: "border-[1.5px] border-secondary text-base text-primary hover:border-primary aria-pressed:border-primary aria-pressed:bg-primary aria-pressed:text-white",
       },
       size: {
         sm: "px-5 py-2 text-sm",
@@ -48,9 +52,10 @@ const buttonVariants = cva(
 /**
  * Como cada camada do botão inverte quando o painel de preenchimento sobe.
  *
- * Os cinco campos são obrigatórios de propósito. Uma variante nova que esqueça
- * `icon`, `rim` ou `shine` passa a falhar a compilação, em vez de ficar com a
- * cor fixa de repouso durante o hover — que é exactamente o bug que esta
+ * Os cinco campos são obrigatórios de propósito, e a tabela é indexada pelas
+ * variantes de `buttonVariants` (`Variant`, abaixo). Uma variante nova sem
+ * entrada, ou uma entrada que esqueça `icon`, `rim` ou `shine`, passa a falhar a
+ * compilação, em vez de ficar com a cor fixa de repouso durante o hover — que é exactamente o bug que esta
  * tabela existe para corrigir: uma camada esquecida acaba da cor daquilo que
  * está atrás dela e desaparece.
  */
@@ -70,6 +75,11 @@ type SwapInvert = {
    */
   shine: string;
 };
+
+// Com `Record<string, …>` a promessa acima era falsa: uma chave em falta
+// compilava e dava `undefined` em runtime, sem `noUncheckedIndexedAccess` a
+// avisar. Indexar pelas variantes reais é o que a torna verdade (#18).
+type Variant = NonNullable<VariantProps<typeof buttonVariants>["variant"]>;
 
 const SHINE_PALETTE = ["#5B8DEF", "#9B5BEF", "#EF5B8D", "#5BD1EF", "#5B8DEF"];
 
@@ -156,7 +166,7 @@ export default function Button(props: ButtonProps) {
   const shineDim =
     "brightness-100 saturate-100 transition-[filter] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:brightness-[0.7] group-hover:saturate-[1.4]";
 
-  const swapInvert: Record<string, SwapInvert> = {
+  const swapInvert: Record<Variant, SwapInvert> = {
     primary: {
       text: "hover:text-primary!",
       fill: "bg-white",
@@ -199,6 +209,22 @@ export default function Button(props: ButtonProps) {
       // Painel claro, como `primary`.
       shine: shineDim,
     },
+    pill: {
+      text: "hover:text-white!",
+      // Escuro como o estado seleccionado: o hover antecipa o que o clique faz.
+      // Numa pill já seleccionada o painel sobe sobre a mesma cor e não se vê,
+      // que é o certo — o rótulo continua a deslizar.
+      fill: "bg-primary",
+      icon: iconSwap,
+      rim: "hover:border-primary!",
+      // Painel escuro, como `outline`.
+      shine: "",
+    },
+    // `link` e `icon` não usam `textSwap` hoje. As entradas existem porque a
+    // tabela é exaustiva: vazias, o painel fica transparente e só o rótulo
+    // desliza — sem inversão, porque não há fundo para inverter contra.
+    link: { text: "", fill: "", icon: "", rim: "", shine: "" },
+    icon: { text: "", fill: "", icon: "", rim: "", shine: "" },
   };
   const invert = swap ? swapInvert[variant ?? "primary"] : undefined;
   const Comp: React.ElementType = asChild
