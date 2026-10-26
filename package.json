@@ -11,11 +11,7 @@
     "lint": "biome check",
     "format": "biome format --write",
     "cms:check": "node --env-file-if-exists=.env cms/hcms/check-contract.ts",
-    "cms:verify": "payload run cms/hcms/verify-content.ts",
-    "cms:parity": "payload run cms/parity/check.ts",
-    "cms:revalidate": "node --env-file-if-exists=.env cms/revalidate-all.ts",
-    "cms:export-leads": "payload run cms/payload/export-quote-requests.ts",
-    "cms:import-submissions": "payload run cms/hcms/import-submissions.ts"
+    "cms:revalidate": "node --env-file-if-exists=.env cms/revalidate-all.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1048.0",
