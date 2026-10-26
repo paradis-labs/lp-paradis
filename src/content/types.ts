@@ -28,10 +28,7 @@ export type ContentKey = string;
 export type RichText = string & { readonly __brand: "RichText" };
 
 export type Media = {
-  /**
-   * Já resolvido pelo provider: `/cdn/<chave>` com o Payload,
-   * `${CMS_URL}/assets/<id>` com o hcms.
-   */
+  /** Já resolvido pelo provider: `${CMS_URL}/assets/<id>/<nome>`. */
   url: string;
   alt: string | null;
   width: number | null;
