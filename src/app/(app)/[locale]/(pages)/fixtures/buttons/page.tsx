@@ -3,8 +3,6 @@ import { notFound } from "next/navigation";
 import type React from "react";
 import Button from "@/components/Button";
 
-
-
 const VARIANTS = [
   "primary",
   "outline",
@@ -130,6 +128,40 @@ function Matrix({ surface }: { surface: "light" | "dark" }) {
           <span>openInNewTab (ver target/rel no DOM)</span>
         </Button>
       </Row>
+
+      {/* `pill` fica fora de `VARIANTS` porque só existe sobre fundo claro (as
+          pills de interesse de `/get-quote`) e porque o seu estado é
+          `aria-pressed`, que as linhas acima não exercitam. Passe o rato nas
+          duas: a não seleccionada sobe painel escuro e inverte o texto; a
+          seleccionada já é escura, o painel não se vê e só o rótulo desliza. */}
+      {surface === "light" ? (
+        <Row title="pill — aria-pressed false / true (as pills de /get-quote)">
+          <Button
+            variant="pill"
+            size="none"
+            textSwap
+            aria-pressed={false}
+            className="px-5 py-3"
+          >
+            <span className="inline-flex items-center gap-2">
+              <span aria-hidden="true">+</span>
+              Web development
+            </span>
+          </Button>
+          <Button
+            variant="pill"
+            size="none"
+            textSwap
+            aria-pressed
+            className="px-5 py-3"
+          >
+            <span className="inline-flex items-center gap-2">
+              <span aria-hidden="true">−</span>
+              Branding
+            </span>
+          </Button>
+        </Row>
+      ) : null}
 
       {/* Controle: sem `textSwap` não se passa pelo `swapInvert`. Estes têm de
           ficar exactamente como estavam antes da change — é o botão do rodapé. */}

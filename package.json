@@ -9,10 +9,17 @@
     "build": "next build",
     "start": "next start",
     "lint": "biome check",
-    "format": "biome format --write"
+    "format": "biome format --write",
+    "cms:check": "node --env-file-if-exists=.env cms/hcms/check-contract.ts",
+    "cms:verify": "payload run cms/hcms/verify-content.ts",
+    "cms:parity": "payload run cms/parity/check.ts",
+    "cms:revalidate": "node --env-file-if-exists=.env cms/revalidate-all.ts",
+    "cms:export-leads": "payload run cms/payload/export-quote-requests.ts",
+    "cms:import-submissions": "payload run cms/hcms/import-submissions.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1048.0",
+    "@directus/sdk": "^27.0.0",
     "@icons-pack/react-simple-icons": "^13.11.1",
     "@payloadcms/db-postgres": "^3.84.1",
     "@payloadcms/next": "^3.84.1",
@@ -27,6 +34,7 @@
     "graphql": "^16.12.0",
     "lenis": "^1.3.23",
     "lucide-react": "^0.563.0",
+    "marked": "^18.1.1",
     "motion": "^12.38.0",
     "next": "16.3.2",
     "next-intl": "^4.12.0",
@@ -34,6 +42,7 @@
     "radix-ui": "^1.4.3",
     "react": "19.2.3",
     "react-dom": "19.2.3",
+    "sanitize-html": "^2.18.1",
     "sharp": "^0.34.5",
     "tailwind-merge": "^3.4.0",
     "zod": "^4.4.3"
@@ -44,6 +53,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/sanitize-html": "^2.16.2",
     "babel-plugin-react-compiler": "1.0.0",
     "shadcn": "^3.8.4",
     "tailwindcss": "^4",

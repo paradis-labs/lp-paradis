@@ -8,6 +8,11 @@ import type { CollectionConfig } from "payload";
 // marketing — existem para ser lidas por qualquer visitante. Esta guarda nome,
 // e-mail e a descrição do projeto de terceiros. Copiar o padrão por hábito
 // publicaria os leads em `GET /api/quote-requests`, sem autenticação nenhuma.
+//
+// A escrita também é fechada. O formulário é anónimo, mas grava pela Local API
+// numa Server Action, que não passa por estas regras. Um `create` público só
+// abriria `POST /api/quote-requests`, por onde um pedido salta o honeypot, o zod
+// e a válvula `form.enabled` que a Server Action aplica.
 export const QuoteRequests: CollectionConfig = {
   slug: "quote-requests",
   labels: {
@@ -20,10 +25,9 @@ export const QuoteRequests: CollectionConfig = {
     defaultColumns: ["name", "email", "createdAt"],
   },
   access: {
-    // Um formulário anónimo implica escrita pública: é a única escrita pública
-    // do site. A válvula de fecho é a flag `form.enabled` da global
-    // `get-quote-page`, verificada na Server Action.
-    create: () => true,
+    // Autenticado, não `false`: um editor pode registar à mão um lead que chegou
+    // por telefone. A escrita anónima é só a da Server Action (`overrideAccess`).
+    create: ({ req }) => Boolean(req.user),
     read: ({ req }) => Boolean(req.user),
     update: ({ req }) => Boolean(req.user),
     delete: ({ req }) => Boolean(req.user),

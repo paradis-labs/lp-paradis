@@ -10,9 +10,9 @@ import { Parallax } from "@/components/ui/parallax";
 import { Reveal } from "@/components/ui/reveal";
 import { TextReveal } from "@/components/ui/text-reveal";
 import { VideoAutoPause } from "@/components/ui/video-autopause";
+import { getHomepage } from "@/content";
 import type { Locale } from "@/i18n/routing";
 import { localizedCtaHref } from "@/lib/locale-href";
-import { getHomepagePayload } from "@/service/payload-functions";
 
 export default async function Home(props: {
   params: Promise<{ locale: Locale }>;
@@ -21,27 +21,23 @@ export default async function Home(props: {
 
   const { locale } = params;
   const { hero, services, projects, faqs, testimonials } =
-    await getHomepagePayload(locale);
+    await getHomepage(locale);
 
-  const bgVideo = services?.ourServicesCT?.backgroundVideo;
-  const videoUrl =
-    bgVideo && typeof bgVideo === "object"
-      ? (bgVideo.url ?? undefined)
-      : undefined;
+  const videoUrl = services.ourServicesCT.backgroundVideo?.url ?? undefined;
 
   return (
     <main>
-      {hero && hero.item && hero.enabled && (
+      {hero.enabled && hero.item && (
         <Hero
           {...hero.item}
-          primaryCtaHref={localizedCtaHref(hero.item.primaryCta?.url, locale)}
+          primaryCtaHref={localizedCtaHref(hero.item.primaryCta.url, locale)}
           secondaryCtaHref={localizedCtaHref(
-            hero.item.secondaryCta?.url,
+            hero.item.secondaryCta.url,
             locale,
           )}
         />
       )}
-      {services && services.items && services.items.length > 0 && (
+      {services.items.length > 0 && (
         <MarqueeServices services={services.items} />
       )}
       <div className="w-full h-full flex flex-col items-center justify-center pb-11">
@@ -52,7 +48,7 @@ export default async function Home(props: {
               id="about-us"
             >
               <div>
-                {services?.title && (
+                {services.title && (
                   <TextReveal
                     as="h2"
                     className="font-gilroy text-4xl font-medium text-neutral-900"
@@ -63,20 +59,20 @@ export default async function Home(props: {
               </div>
               <div>
                 <p className="text-xl text-muted-foreground">
-                  {services?.subtitle}
+                  {services.subtitle}
                 </p>
               </div>
             </div>
             <div className="w-full flex justify-start">
               <CalendlyCta
                 variant="outline"
-                href={localizedCtaHref(services?.primaryCta?.url, locale)}
+                href={localizedCtaHref(services.primaryCta.url, locale)}
                 trailingIcon={ArrowRightDown}
                 circleIcon
                 magnetic
                 textSwap
               >
-                <span>{services?.primaryCta?.label}</span>
+                <span>{services.primaryCta.label}</span>
               </CalendlyCta>
             </div>
           </Reveal>
@@ -101,30 +97,22 @@ export default async function Home(props: {
               </Parallax>
             </div>
             <div className="w-full bg-primary flex flex-col rounded-2xl pb-12 pt-12 md:pt-34 gap-32 services_shape">
-              {services && (
-                <div id="services">
-                  <ServicesSection services={services} />
-                </div>
-              )}
-              {projects && (
-                <div id="products">
-                  <ProductsSection
-                    projects={projects}
-                    ctaHref={localizedCtaHref(
-                      projects?.primaryCta?.url,
-                      locale,
-                    )}
-                  />
-                </div>
-              )}
-              {testimonials && (
-                <div id="testimonials">
-                  <TestimonialsSection
-                    testimonials={testimonials}
-                    locale={locale}
-                  />
-                </div>
-              )}
+              <div id="services">
+                <ServicesSection services={services} locale={locale} />
+              </div>
+              <div id="products">
+                <ProductsSection
+                  projects={projects}
+                  locale={locale}
+                  ctaHref={localizedCtaHref(projects.primaryCta.url, locale)}
+                />
+              </div>
+              <div id="testimonials">
+                <TestimonialsSection
+                  testimonials={testimonials}
+                  locale={locale}
+                />
+              </div>
             </div>
           </div>
         </section>
@@ -132,7 +120,7 @@ export default async function Home(props: {
           id="faqs"
           className="container w-full mx-auto px-4 xl:px-0 py-12 flex flex-col gap-5 leading-8"
         >
-          {faqs && <FAQSection {...faqs} />}
+          <FAQSection {...faqs} />
         </section>
       </div>
     </main>

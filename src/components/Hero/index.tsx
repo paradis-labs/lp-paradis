@@ -1,7 +1,7 @@
 "use client";
 import { motion } from "motion/react";
+import type { Hero as Herotype } from "@/content";
 import { cn } from "@/lib/utils";
-import type { Hero as Herotype } from "../../../payload-types";
 import CalendlyCta from "../CalendlyCta";
 import { CursorGlow } from "../ui/cursor-glow";
 import { GridPattern } from "../ui/grid-pattern";

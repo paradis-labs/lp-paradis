@@ -1,7 +1,10 @@
 import type { CollectionConfig } from "payload";
+import { contentCollectionAccess } from "./access";
+import { revalidateCollection } from "./hooks/revalidate";
 
 export const Testimonials: CollectionConfig = {
   slug: "testimonials",
+  hooks: revalidateCollection("testimonials"),
   labels: {
     singular: "Testimonial",
     plural: "Testimonials",
@@ -11,9 +14,7 @@ export const Testimonials: CollectionConfig = {
     useAsTitle: "authorName",
     defaultColumns: ["authorName", "company", "updatedAt"],
   },
-  access: {
-    read: () => true,
-  },
+  access: contentCollectionAccess,
   fields: [
     {
       name: "authorName",

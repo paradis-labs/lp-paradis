@@ -2,12 +2,17 @@ import {
   ScrollVelocityContainer,
   ScrollVelocityRow,
 } from "@/components/ui/scroll-based-velocity";
+import type { Homepage } from "@/content";
 import type { Locale } from "@/i18n/routing";
-import { cn, isPopulated } from "@/lib/utils";
-import type { Homepage, Testimonial } from "../../../payload-types";
+import { cn } from "@/lib/utils";
 import SectionHeading from "../SectionHeading";
 import TestimonialCard from "../TestimonialCard";
 import { Reveal } from "../ui/reveal";
+
+const BADGE: Record<Locale, string> = {
+  en: "Testimonials",
+  pt: "Testemunhos",
+};
 
 const columns = [
   { id: "col-1", reverse: true, className: "" }, // desce — sempre visível
@@ -22,15 +27,15 @@ export default function TestimonialsSection({
   testimonials: Homepage["testimonials"];
   locale: Locale;
 }) {
-  const items = (testimonials?.items ?? []).filter(isPopulated<Testimonial>);
+  const items = testimonials.items;
 
   return (
     <div className="w-full h-full flex flex-col justify-start gap-14 px-14">
       <Reveal>
         <SectionHeading
-          badge="Testimonials"
-          title={testimonials?.title}
-          subtitle={testimonials?.subtitle}
+          badge={BADGE[locale]}
+          title={testimonials.title}
+          subtitle={testimonials.subtitle}
         />
       </Reveal>
       {items.length > 0 ? (
@@ -45,9 +50,9 @@ export default function TestimonialsSection({
                   direction={col.reverse ? -1 : 1}
                   className="h-full"
                 >
-                  {items.map((testimonial, index) => (
+                  {items.map((testimonial) => (
                     <div
-                      key={`${col.id}-${testimonial.id ?? index}`}
+                      key={`${col.id}-${testimonial.key}`}
                       className="w-full pb-4"
                     >
                       <TestimonialCard

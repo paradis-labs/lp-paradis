@@ -1,7 +1,10 @@
 import type { CollectionConfig } from "payload";
+import { contentCollectionAccess } from "./access";
+import { revalidateCollection } from "./hooks/revalidate";
 
 export const Services: CollectionConfig = {
   slug: "services",
+  hooks: revalidateCollection("services"),
   labels: {
     singular: "Service",
     plural: "Services",
@@ -11,9 +14,7 @@ export const Services: CollectionConfig = {
     useAsTitle: "title",
     defaultColumns: ["title", "order", "updatedAt"],
   },
-  access: {
-    read: () => true,
-  },
+  access: contentCollectionAccess,
   fields: [
     {
       name: "title",
@@ -96,6 +97,6 @@ export const Services: CollectionConfig = {
       type: "upload",
       relationTo: "media",
       label: "Cover Image",
-    }
+    },
   ],
 };

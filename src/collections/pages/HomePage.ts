@@ -1,14 +1,15 @@
 import type { GlobalConfig } from "payload";
+import { contentGlobalAccess } from "../access";
+import { revalidateGlobal } from "../hooks/revalidate";
 
 export const HomePage: GlobalConfig = {
   slug: "homepage",
+  hooks: { afterChange: [revalidateGlobal("homepage")] },
   label: "Home Page",
   admin: {
     group: "Site Settings",
   },
-  access: {
-    read: () => true,
-  },
+  access: contentGlobalAccess,
   fields: [
     {
       name: "seo",

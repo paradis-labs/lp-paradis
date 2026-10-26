@@ -1,14 +1,15 @@
 import type { GlobalConfig } from "payload";
+import { contentGlobalAccess } from "../access";
+import { revalidateGlobal } from "../hooks/revalidate";
 
 export const Menu: GlobalConfig = {
   slug: "menu",
+  hooks: { afterChange: [revalidateGlobal("navbar")] },
   label: "Navigation Menu",
   admin: {
     group: "Site Settings",
   },
-  access: {
-    read: () => true,
-  },
+  access: contentGlobalAccess,
   fields: [
     {
       name: "logo",
@@ -128,4 +129,3 @@ export const Menu: GlobalConfig = {
     },
   ],
 };
-

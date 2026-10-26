@@ -1,22 +1,24 @@
 import { notFound } from "next/navigation";
 import type React from "react";
 import Header from "@/components/Header";
+import type { NavBar } from "@/content";
 import type { Locale } from "@/i18n/routing";
-import type { PopulatedNavBar } from "@/service/types";
 
 // Fixture de desenvolvimento para os destinos do navbar e para o switch de
 // idioma.
 //
 // Existe porque os cenários de `navbar-link-destinations` são sobre que `href`
 // sai de cada `url` do CMS — âncora, `mailto:`, URL absoluta, campo vazio — e
-// verificá-los pelo admin exigiria editar o global `Menu` seis vezes e repor. O
-// contrato do `Header` é `PopulatedNavBar & { locale }`, props simples.
+// verificá-los pelo admin exigiria editar o global `Menu` sete vezes e repor. O
+// contrato do `Header` é `NavBar & { locale }`, props simples.
 //
 // Cenários de origem, em `add-navbar-locale-switch/specs/`:
 //   navbar-link-destinations
 //     • "Botão com URL" / "Botão sem URL authorada"    → casos 1 e 2
 //     • "Link relativo" / "Link para a raiz"           → caso 1
-//     • "Âncora na mesma página"                       → caso 1
+//     • "Âncora na raiz"                               → casos 1 e 7
+//     • "Âncora na raiz a partir de outra rota"        → caso 7 (clicar)
+//     • "Query na raiz"                                → caso 7
 //     • "Âncora sem barra inicial"                     → caso 3
 //     • "URL externa" / "Destino mailto"               → caso 3
 //     • "Locale propagado"                             → todos
@@ -25,7 +27,7 @@ import type { PopulatedNavBar } from "@/service/types";
 //     • "Sem identificadores duplicados"               → contagem abaixo
 //
 // **O switch NÃO é fabricável aqui.** Ele deriva o locale do `usePathname`, não
-// de props — logo, em `/pt/fixtures/navbar` os seis navbars mostram todos `PT`, e
+// de props — logo, em `/pt/fixtures/navbar` os sete navbars mostram todos `PT`, e
 // em `/en/fixtures/navbar` mostram todos `EN`. Verificar a pílula nos dois
 // estados é abrir esta rota nos dois locales, não comparar blocos.
 //
@@ -33,15 +35,21 @@ import type { PopulatedNavBar } from "@/service/types";
 // a mais são opcionais — e passa a exercitar um navbar desactualizado sem
 // avisar. Quem mexer no schema reconfere os cenários acima.
 
-const BASE: PopulatedNavBar = {
-  id: 1,
+const BASE: NavBar = {
+  logo: null,
   links: [
-    { id: "l1", label: "Home", url: "/", openInNewTab: false },
-    { id: "l2", label: "Services", url: "/#services", openInNewTab: false },
-    { id: "l3", label: "About Us", url: "/about", openInNewTab: false },
+    { key: "l1", label: "Home", url: "/", openInNewTab: false },
+    { key: "l2", label: "Services", url: "/#services", openInNewTab: false },
+    { key: "l3", label: "About Us", url: "/about", openInNewTab: false },
   ],
   buttons: [
-    { id: "b1", label: "Get Quote", url: "/get-quote", variant: "primary" },
+    {
+      key: "b1",
+      label: "Get Quote",
+      url: "/get-quote",
+      variant: "primary",
+      openInNewTab: false,
+    },
   ],
 };
 
@@ -49,13 +57,13 @@ const CASES: Array<{
   scenario: string;
   prop: string;
   expected: string;
-  args: PopulatedNavBar;
+  args: NavBar;
 }> = [
   {
     scenario: "Conteúdo completo — prefixo de locale em tudo",
     prop: 'links: ["/", "/#services", "/about"], buttons: ["/get-quote"]',
     expected:
-      "na rota /pt: os links apontam para /pt, /pt/#services e /pt/about, e o botão para /pt/get-quote — nenhum href sai sem prefixo",
+      "na rota /pt: os links apontam para /pt, /pt#services e /pt/about, e o botão para /pt/get-quote — nenhum href sai sem prefixo, e nenhuma âncora na raiz ganha barra antes do #",
     args: BASE,
   },
   {
@@ -65,7 +73,15 @@ const CASES: Array<{
       "o botão continua a existir com o seu rótulo, mas NÃO é uma âncora — não parece clicável para lado nenhum",
     args: {
       ...BASE,
-      buttons: [{ id: "b1", label: "Get Quote", url: "", variant: "primary" }],
+      buttons: [
+        {
+          key: "b1",
+          label: "Get Quote",
+          url: "",
+          variant: "primary",
+          openInNewTab: false,
+        },
+      ],
     },
   },
   {
@@ -76,14 +92,24 @@ const CASES: Array<{
     args: {
       ...BASE,
       links: [
-        { id: "l1", label: "Âncora crua", url: "#services" },
         {
-          id: "l2",
+          key: "l1",
+          label: "Âncora crua",
+          url: "#services",
+          openInNewTab: false,
+        },
+        {
+          key: "l2",
           label: "Kitenda",
           url: "https://kitenda.paradis.host/",
           openInNewTab: true,
         },
-        { id: "l3", label: "Email", url: "mailto:hello@paradis.host" },
+        {
+          key: "l3",
+          label: "Email",
+          url: "mailto:hello@paradis.host",
+          openInNewTab: false,
+        },
       ],
     },
   },
@@ -107,6 +133,24 @@ const CASES: Array<{
     expected:
       "renderiza sem lançar erro, com logo e switch apenas, e o layout da barra permanece íntegro",
     args: { ...BASE, links: [], buttons: [] },
+  },
+  {
+    scenario: "Âncora e query na raiz — sem barra antes do # ou do ?",
+    prop: 'links: ["/#about-us", "/?ref=nav"]',
+    expected:
+      "na rota /pt: /pt#about-us e /pt?ref=nav — nunca /pt/#about-us. Abrir /en/get-quote e clicar em About tem de terminar em /en com #about-us na viewport (#13)",
+    args: {
+      ...BASE,
+      links: [
+        { key: "l1", label: "About", url: "/#about-us", openInNewTab: false },
+        {
+          key: "l2",
+          label: "Home com query",
+          url: "/?ref=nav",
+          openInNewTab: false,
+        },
+      ],
+    },
   },
 ];
 
@@ -167,9 +211,9 @@ export default async function NavbarFixturePage({
           abaixo.
         </p>
         <p className="mt-2 max-w-3xl text-sm font-semibold text-neutral-900">
-          Contagem esperada: 6 navbars fabricados + 1 navbar real herdado do
-          layout, no topo da página. Total 7 — e{" "}
-          <strong>7 pílulas de idioma em repouso</strong>. O{" "}
+          Contagem esperada: 7 navbars fabricados + 1 navbar real herdado do
+          layout, no topo da página. Total 8 — e{" "}
+          <strong>8 pílulas de idioma em repouso</strong>. O{" "}
           <code className="font-mono">NavBarMobileMenu</code> põe os children em
           dois lugares, mas o portal mobile só é montado{" "}
           <em>enquanto o menu está aberto</em> (

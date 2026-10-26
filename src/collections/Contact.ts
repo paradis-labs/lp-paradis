@@ -1,7 +1,10 @@
 import type { CollectionConfig } from "payload";
+import { contentCollectionAccess } from "./access";
+import { revalidateCollection } from "./hooks/revalidate";
 
 export const Contact: CollectionConfig = {
   slug: "contact",
+  hooks: revalidateCollection("contact"),
   labels: {
     singular: "Contact",
     plural: "Contacts",
@@ -9,9 +12,7 @@ export const Contact: CollectionConfig = {
   admin: {
     group: "Content",
   },
-  access: {
-    read: () => true,
-  },
+  access: contentCollectionAccess,
   fields: [
     {
       name: "sectionTitle",

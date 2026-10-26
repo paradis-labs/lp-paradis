@@ -1,7 +1,10 @@
 import type { CollectionConfig } from "payload";
+import { contentCollectionAccess } from "./access";
+import { revalidateCollection } from "./hooks/revalidate";
 
 export const Media: CollectionConfig = {
   slug: "media",
+  hooks: revalidateCollection("media"),
   labels: {
     singular: "Media",
     plural: "Media",
@@ -9,9 +12,7 @@ export const Media: CollectionConfig = {
   admin: {
     group: "Content",
   },
-  access: {
-    read: () => true,
-  },
+  access: contentCollectionAccess,
   upload: {
     staticDir: "media",
     imageSizes: [

@@ -1,5 +1,10 @@
 "use server";
 
+import {
+  createQuoteRequest,
+  findServicesBySlugs,
+  isQuoteFormEnabled,
+} from "@/content";
 import type { Locale } from "@/i18n/routing";
 import { locales } from "@/i18n/routing";
 import {
@@ -8,8 +13,6 @@ import {
   quoteSubmissionSchema,
   toFieldErrors,
 } from "@/lib/quote-request";
-import { getPayloadInstance } from "@/service";
-import { GLOBAL_SLUGS } from "@/service/constants";
 
 // A submissão de `/get-quote`. Server Action e não route handler: `(payload)/api`
 // é território gerado pelo Payload (o CLAUDE.md pede para não editar à mão) e a
@@ -32,20 +35,10 @@ export async function submitQuoteRequest(
     return { status: "success" };
   }
 
-  const payload = await getPayloadInstance();
-
   // A válvula de fecho da única escrita pública do site. Tem de agir aqui e não
   // só no render: esconder o formulário no cliente não fecha a action, e quem
   // já tenha a página aberta continuaria a submeter.
-  //
-  // `depth: 0` porque só a flag interessa — popular os serviços do grupo `form`
-  // seria trabalho jogado fora em cada submissão.
-  const settings = await payload.findGlobal({
-    slug: GLOBAL_SLUGS.getQuote,
-    depth: 0,
-  });
-
-  if (settings?.form?.enabled === false) {
+  if (!(await isQuoteFormEnabled())) {
     return { status: "error" };
   }
 
@@ -67,40 +60,26 @@ export async function submitQuoteRequest(
   const { name, email, message, interests } = parsed.data;
 
   try {
-    // Os interesses chegam como slugs e são resolvidos contra a coleção. O que
-    // não corresponder a nenhum serviço é simplesmente descartado — um id
-    // forjado não entra na submissão, e os interesses válidos do mesmo envio
-    // continuam a ser gravados.
-    const matched =
-      interests.length > 0
-        ? await payload.find({
-            collection: "services",
-            where: { slug: { in: interests } },
-            depth: 0,
-            limit: QUOTE_LIMITS.interests,
-            pagination: false,
-          })
-        : null;
+    // Um slug forjado não corresponde a nenhum serviço e fica de fora; os
+    // interesses válidos do mesmo envio continuam a ser gravados.
+    const services = await findServicesBySlugs(
+      interests,
+      QUOTE_LIMITS.interests,
+    );
 
-    const services = matched?.docs ?? [];
-
-    await payload.create({
-      collection: "quote-requests",
-      data: {
-        name,
-        email,
-        message,
-        services: services.map((service) => service.id),
-        serviceSlugs: services.map((service) => service.slug),
-        // Determinado no servidor. Um locale fora da lista suportada cai no
-        // padrão em vez de rebentar a gravação por causa de metadados.
-        submittedLocale: locales.includes(locale) ? locale : "en",
-      },
+    await createQuoteRequest({
+      name,
+      email,
+      message,
+      services,
+      // Determinado no servidor. Um locale fora da lista suportada cai no
+      // padrão em vez de rebentar a gravação por causa de metadados.
+      submittedLocale: locales.includes(locale) ? locale : "en",
     });
   } catch (error) {
     // O visitante recebe a mensagem genérica do CMS; o detalhe fica no log do
     // servidor, onde é útil sem expor nada.
-    payload.logger.error({ err: error }, "quote-request create failed");
+    console.error("[quote-request] create failed", error);
     return { status: "error" };
   }
 

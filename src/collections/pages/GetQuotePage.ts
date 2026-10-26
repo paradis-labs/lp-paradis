@@ -1,4 +1,6 @@
 import type { GlobalConfig } from "payload";
+import { contentGlobalAccess } from "../access";
+import { revalidateGlobal } from "../hooks/revalidate";
 
 // A página `/get-quote`. Global e não documento de uma coleção `Pages` pelo
 // mesmo motivo que a `HomePage`: o layout é desenhado, não composto por blocos.
@@ -14,13 +16,12 @@ import type { GlobalConfig } from "payload";
 // protege contra um campo esvaziado depois.
 export const GetQuotePage: GlobalConfig = {
   slug: "get-quote-page",
+  hooks: { afterChange: [revalidateGlobal("quote-page")] },
   label: "Get Quote Page",
   admin: {
     group: "Site Settings",
   },
-  access: {
-    read: () => true,
-  },
+  access: contentGlobalAccess,
   fields: [
     {
       name: "seo",

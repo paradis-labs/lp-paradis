@@ -1,14 +1,15 @@
 import type { GlobalConfig } from "payload";
+import { contentGlobalAccess } from "../access";
+import { revalidateGlobal } from "../hooks/revalidate";
 
 export const Footer: GlobalConfig = {
   slug: "footer",
+  hooks: { afterChange: [revalidateGlobal("footer")] },
   label: "Footer",
   admin: {
     group: "Globals",
   },
-  access: {
-    read: () => true,
-  },
+  access: contentGlobalAccess,
   fields: [
     {
       name: "logo",

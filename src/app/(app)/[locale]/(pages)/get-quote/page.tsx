@@ -1,14 +1,14 @@
 import type { Metadata } from "next";
 import { cache } from "react";
 import GetQuote from "@/components/GetQuote";
+import { getQuotePage } from "@/content";
 import type { Locale } from "@/i18n/routing";
-import { getQuotePagePayload } from "@/service/payload-functions";
 
 interface GetQuoteRouteProps {
   params: Promise<{ locale: Locale }>;
 }
 
-const getContent = cache((locale: Locale) => getQuotePagePayload(locale));
+const getContent = cache((locale: Locale) => getQuotePage(locale));
 
 export async function generateMetadata({
   params,
@@ -16,8 +16,8 @@ export async function generateMetadata({
   const { locale } = await params;
   const content = await getContent(locale);
 
-  const title = content?.seo?.metaTitle?.trim();
-  const description = content?.seo?.metaDescription?.trim();
+  const title = content.seo.metaTitle?.trim();
+  const description = content.seo.metaDescription?.trim();
 
   return {
     ...(title ? { title } : {}),

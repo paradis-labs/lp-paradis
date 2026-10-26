@@ -1,4 +1,5 @@
 import { z } from "zod";
+import type { Locale } from "@/i18n/routing";
 
 // O contrato da submissão de `/get-quote`, partilhado pela Server Action e pelo
 // componente de cliente. O cliente valida para dar retorno imediato; a action
@@ -84,22 +85,36 @@ export type QuoteFormState =
 
 // Piso de cada mensagem, pela razão que `lib/cms-text.ts` documenta: o campo
 // correspondente da global pode estar vazio, e uma mensagem de erro em branco
-// deixa o visitante sem saber o que corrigir.
-export const QUOTE_MESSAGE_FALLBACK: Record<
+// deixa o visitante sem saber o que corrigir. Um piso por idioma: em `/pt`, uma
+// mensagem vazia no CMS cai em português. As cópias `pt` são as do formulário
+// `quote_request` no hcms.
+export type QuoteMessages = Record<
   QuoteErrorCode | "success" | "error",
   string
-> = {
-  success:
-    "Thanks — we've got your brief. We'll reply within one business day.",
-  error: "Something went wrong sending your enquiry. Please try again.",
-  nameRequired: "Please tell us your name.",
-  emailRequired: "Please enter your email.",
-  emailInvalid: "That email doesn't look right.",
-  messageRequired: "Please tell us about your project.",
-  tooLong: "That's a bit too long — please shorten it.",
-};
+>;
 
-export type QuoteMessages = typeof QUOTE_MESSAGE_FALLBACK;
+export const QUOTE_MESSAGE_FALLBACK: Record<Locale, QuoteMessages> = {
+  en: {
+    success:
+      "Thanks — we've got your brief. We'll reply within one business day.",
+    error: "Something went wrong sending your enquiry. Please try again.",
+    nameRequired: "Please tell us your name.",
+    emailRequired: "Please enter your email.",
+    emailInvalid: "That email doesn't look right.",
+    messageRequired: "Please tell us about your project.",
+    tooLong: "That's a bit too long — please shorten it.",
+  },
+  pt: {
+    success:
+      "Obrigado — recebemos o seu briefing. Respondemos dentro de um dia útil.",
+    error: "Algo correu mal ao enviar o seu pedido. Tente novamente.",
+    nameRequired: "Diga-nos o seu nome.",
+    emailRequired: "Indique o seu e-mail.",
+    emailInvalid: "Esse e-mail não parece válido.",
+    messageRequired: "Fale-nos do seu projecto.",
+    tooLong: "É um pouco longo — encurte, por favor.",
+  },
+};
 
 // Traduz o `ZodError` para o mapa de códigos por campo. Só o primeiro erro de
 // cada campo interessa — o formulário mostra uma mensagem por campo.

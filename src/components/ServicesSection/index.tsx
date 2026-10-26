@@ -10,20 +10,28 @@ import {
   Widget6,
 } from "@solar-icons/react";
 import type React from "react";
-import type { PopulatedHomepage } from "@/service/types";
+import type { Homepage } from "@/content";
+import type { Locale } from "@/i18n/routing";
 import Badge from "../Badge";
 import { Reveal } from "../ui/reveal";
 import { TextReveal } from "../ui/text-reveal";
 
+const BADGE: Record<Locale, string> = {
+  en: "Our Services",
+  pt: "Serviços",
+};
+
 type ServiceLayoutSpacer = { transparent: true; className: string };
 
 type ServiceLayoutCard = {
-  // Merge key — must match the service `slug` created in Payload.
+  // Merge key — the service `slug` that `@/content` delivers, the same for
+  // both providers (the `en-US` slug on the hcms).
   slug: string;
   Icon: React.ElementType;
   className: string;
-  fallbackName: string;
-  fallbackDescription: string;
+  // Shown only when the CMS has no service with this slug — in the route's
+  // locale, so a missing service never brings English into `/pt`.
+  fallback: Record<Locale, { name: string; description: string }>;
 };
 
 type ServiceLayoutCell = ServiceLayoutSpacer | ServiceLayoutCard;
@@ -46,47 +54,92 @@ const SERVICE_LAYOUT: ServiceLayoutCell[] = [
       "hidden md:block md:col-span-3 md:row-span-3 md:col-start-10 md:row-start-1",
   }, // 5
   {
-    slug: "uiux-design",
+    slug: "ui-ux-design",
     Icon: Palette2,
-    fallbackName: "UI/UX Design",
-    fallbackDescription:
-      "Designing intuitive and engaging digital experiences that users love.",
+    fallback: {
+      en: {
+        name: "UI/UX Design",
+        description:
+          "Designing intuitive and engaging digital experiences that users love.",
+      },
+      pt: {
+        name: "Design UI/UX",
+        description:
+          "Desenhamos experiências digitais intuitivas e envolventes, que os utilizadores adoram.",
+      },
+    },
     className:
       "min-h-[120px] md:min-h-0 md:col-span-3 md:row-span-2 md:col-start-4 md:row-start-2",
   },
   {
     slug: "brand-identity",
     Icon: Filters,
-    fallbackName: "Brand Identity",
-    fallbackDescription:
-      "Building memorable visual identities that elevate your brand presence.",
+    fallback: {
+      en: {
+        name: "Brand Identity",
+        description:
+          "Building memorable visual identities that elevate your brand presence.",
+      },
+      pt: {
+        name: "Identidade de marca",
+        description:
+          "Criamos identidades visuais memoráveis que reforçam a presença da sua marca.",
+      },
+    },
     className:
       "min-h-[120px] md:min-h-0 md:col-span-3 md:row-span-2 md:col-start-7 md:row-start-2",
   },
   {
     slug: "mobile-development",
     Icon: Smartphone,
-    fallbackName: "Mobile Development",
-    fallbackDescription:
-      "Creating fast, scalable, and user-focused mobile applications.",
+    fallback: {
+      en: {
+        name: "Mobile Development",
+        description:
+          "Creating fast, scalable, and user-focused mobile applications.",
+      },
+      pt: {
+        name: "Desenvolvimento mobile",
+        description:
+          "Criamos aplicações móveis rápidas, escaláveis e centradas no utilizador.",
+      },
+    },
     className:
       "min-h-[120px] md:min-h-0 md:col-span-3 md:row-span-2 md:col-start-2 md:row-start-4",
   },
   {
     slug: "web-development",
     Icon: Laptop,
-    fallbackName: "Web Development",
-    fallbackDescription:
-      "Developing modern websites and web platforms built for performance.",
+    fallback: {
+      en: {
+        name: "Web Development",
+        description:
+          "Developing modern websites and web platforms built for performance.",
+      },
+      pt: {
+        name: "Desenvolvimento web",
+        description:
+          "Desenvolvemos sites e plataformas web modernas, pensadas para o desempenho.",
+      },
+    },
     className:
       "min-h-[120px] md:min-h-0 md:col-span-4 md:row-span-2 md:col-start-5 md:row-start-4",
   },
   {
     slug: "api-integrations",
     Icon: ServerPath,
-    fallbackName: "API & Integrations",
-    fallbackDescription:
-      "Connecting systems and services to streamline digital operations.",
+    fallback: {
+      en: {
+        name: "API & Integrations",
+        description:
+          "Connecting systems and services to streamline digital operations.",
+      },
+      pt: {
+        name: "APIs e integrações",
+        description:
+          "Ligamos sistemas e serviços para simplificar as operações digitais.",
+      },
+    },
     className:
       "min-h-[120px] md:min-h-0 md:col-span-3 md:row-span-2 md:col-start-9 md:row-start-4",
   },
@@ -98,18 +151,36 @@ const SERVICE_LAYOUT: ServiceLayoutCell[] = [
   {
     slug: "ai-solutions",
     Icon: Cpu,
-    fallbackName: "AI Solutions",
-    fallbackDescription:
-      "AI-powered solutions that automate and enhance digital experiences.",
+    fallback: {
+      en: {
+        name: "AI Solutions",
+        description:
+          "AI-powered solutions that automate and enhance digital experiences.",
+      },
+      pt: {
+        name: "Soluções de IA",
+        description:
+          "Soluções com inteligência artificial que automatizam e melhoram experiências digitais.",
+      },
+    },
     className:
       "min-h-[120px] md:min-h-0 md:col-span-3 md:row-span-2 md:col-start-4 md:row-start-6",
   },
   {
     slug: "product-strategy",
     Icon: Chart,
-    fallbackName: "Product Strategy",
-    fallbackDescription:
-      "Strategic guidance for smarter digital growth and innovation.",
+    fallback: {
+      en: {
+        name: "Product Strategy",
+        description:
+          "Strategic guidance for smarter digital growth and innovation.",
+      },
+      pt: {
+        name: "Estratégia de produto",
+        description:
+          "Orientação estratégica para um crescimento digital e uma inovação mais inteligentes.",
+      },
+    },
     className:
       "min-h-[120px] md:min-h-0 md:col-span-3 md:row-span-2 md:col-start-7 md:row-start-6",
   },
@@ -127,13 +198,15 @@ const SERVICE_LAYOUT: ServiceLayoutCell[] = [
 
 export default function ServicesSection({
   services,
+  locale,
 }: {
-  services: PopulatedHomepage["services"];
+  services: Homepage["services"];
+  locale: Locale;
 }) {
   // Merge by slug: pull editable content from the CMS, falling back to the
   // hardcoded copy when a slot has no matching service.
   const servicesBySlug = new Map(
-    (services?.items ?? []).map((s) => [s.slug, s] as const),
+    services.items.map((s) => [s.slug, s] as const),
   );
 
   return (
@@ -146,7 +219,7 @@ export default function ServicesSection({
             weight: "Bold",
           }}
         >
-          Our Services
+          {BADGE[locale]}
         </Badge>
         <div className="w-full h-full flex text-white gap-4 flex-col">
           <div>
@@ -184,9 +257,9 @@ export default function ServicesSection({
             );
           }
           const service = servicesBySlug.get(cell.slug);
-          const name = service?.title ?? cell.fallbackName;
-          const description =
-            service?.shortDescription ?? cell.fallbackDescription;
+          const fallback = cell.fallback[locale];
+          const name = service?.title ?? fallback.name;
+          const description = service?.shortDescription ?? fallback.description;
           const ItemIcon = cell.Icon;
           return (
             <Reveal

@@ -1,7 +1,10 @@
 import type { CollectionConfig } from "payload";
+import { contentCollectionAccess } from "./access";
+import { revalidateCollection } from "./hooks/revalidate";
 
 export const FAQs: CollectionConfig = {
   slug: "faqs",
+  hooks: revalidateCollection("faqs"),
   labels: {
     singular: "FAQ",
     plural: "FAQs",
@@ -11,9 +14,7 @@ export const FAQs: CollectionConfig = {
     useAsTitle: "question",
     defaultColumns: ["question", "category", "order", "updatedAt"],
   },
-  access: {
-    read: () => true,
-  },
+  access: contentCollectionAccess,
   fields: [
     {
       name: "question",
