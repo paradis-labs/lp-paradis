@@ -9,5 +9,5 @@ antes da 0a	fix-footer-slot-soft-navigation	#14	7/13
 3	cms-phase-3-directus-provider	#22B (no site)	17/23
 independente	localize-ui-copy-and-services-grid	inglês em /pt vindo do código; grelha de serviços por slug	12/12
 4	cms-phase-4-cutover	troca de provider em produção	5/18
-5 (depois da janela da fase 4)	cms-phase-5-remove-payload	remoção do Payload	0/26
+5	cms-phase-5-remove-payload	remoção do Payload (branch chore/cms-phase-5-remove-payload)	17/26
 roadmap	migrate-cms-to-directus	índice das fases 0a–5	0/12
