@@ -11,15 +11,13 @@ import { Reveal } from "@/components/ui/reveal";
 import { TextReveal } from "@/components/ui/text-reveal";
 import { VideoAutoPause } from "@/components/ui/video-autopause";
 import { getHomepage } from "@/content";
-import type { Locale } from "@/i18n/routing";
+import { requireLocale } from "@/i18n/require-locale";
 import { localizedCtaHref } from "@/lib/locale-href";
 
 export default async function Home(props: {
-  params: Promise<{ locale: Locale }>;
+  params: Promise<{ locale: string }>;
 }) {
-  const params = await props.params;
-
-  const { locale } = params;
+  const locale = requireLocale((await props.params).locale);
   const { hero, services, projects, faqs, testimonials } =
     await getHomepage(locale);
 

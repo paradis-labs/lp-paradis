@@ -10,6 +10,9 @@ const nextConfig: NextConfig = {
   /* config options here */
   output: "standalone",
   reactCompiler: true,
+  // `"use cache"` nas leituras de `@/content` (fase 5). Muda o rendering da
+  // app: dados de runtime fora de `Suspense` passam a erro de build.
+  cacheComponents: true,
   images: {
     remotePatterns: [
       {

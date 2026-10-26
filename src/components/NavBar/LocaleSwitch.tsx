@@ -57,14 +57,41 @@ function LocaleSwitchLink({ className }: { className?: string }) {
   );
 }
 
+// O fallback do boundary. As páginas são pré-renderizadas (`cacheComponents`),
+// por isso é **ele** que sai no HTML estático, e tem de ser um link real: sem
+// JavaScript, ou até hidratar, é o único caminho para o outro idioma. O
+// `usePathname` é conhecido no prerender (só o `useSearchParams` obriga ao
+// boundary), por isso leva à mesma página no outro idioma; só a query string,
+// que não existe no HTML estático, fica de fora até o switch completo assumir.
+function LocaleSwitchFallback({
+  className,
+  locale,
+}: {
+  className?: string;
+  locale: Locale;
+}) {
+  const pathname = usePathname();
+  const target = otherLocale(locale);
+
+  return (
+    <Button asChild variant="outline" size="sm" className={className}>
+      <Link
+        href={swapLocale(pathname, target)}
+        aria-label={SWITCH_LABEL[target]}
+      >
+        <PillContent locale={locale} />
+      </Link>
+    </Button>
+  );
+}
+
 // `useSearchParams` sem `<Suspense>` acima faz o Next renderizar no cliente toda
 // a árvore até ao boundary mais próximo — e este componente vive no header do
 // root layout, ou seja, em todas as rotas (#16). O boundary fica aqui, à volta
 // só do switch, para que o resto do header possa ser pré-renderizado.
 //
-// O fallback é a mesma pílula sem destino: um `<span>` no lugar do `<Link>`,
-// com o locale vindo por prop porque o pathname ainda não está disponível.
-// Mesma caixa, logo sem layout shift quando o boundary resolve.
+// O fallback é a mesma pílula, já com destino (ver acima). Mesma caixa, logo
+// sem layout shift quando o boundary resolve.
 export default function LocaleSwitch({
   className,
   locale,
@@ -74,13 +101,7 @@ export default function LocaleSwitch({
 }) {
   return (
     <Suspense
-      fallback={
-        <Button asChild variant="outline" size="sm" className={className}>
-          <span>
-            <PillContent locale={locale} />
-          </span>
-        </Button>
-      }
+      fallback={<LocaleSwitchFallback className={className} locale={locale} />}
     >
       <LocaleSwitchLink className={className} />
     </Suspense>
