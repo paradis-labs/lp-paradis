@@ -15,7 +15,6 @@ interface CalendlyCtaProps extends VariantProps<typeof buttonVariants> {
   trailingIcon?: React.ComponentType<IconProps>;
   iconProps?: IconProps;
   circleIcon?: boolean;
-  magnetic?: boolean;
   textSwap?: boolean;
   className?: string;
   children: React.ReactNode;

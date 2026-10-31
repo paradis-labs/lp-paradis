@@ -81,6 +81,18 @@
   --radius-card-lg: 13.5px;
   --radius-card-xl: 20px;
   --radius-panel: 24px;
+
+  /*
+   * Os valores do design v3 (`openspec/design/v3 · EN-html`) que não tinham
+   * nome no tema. Os restantes já existiam: `#151718` é `--foreground`,
+   * `#212528` é `--primary`, `#31373d` é `--muted-foreground`, `#edeef0` é
+   * `--border`.
+   */
+  --stone: #525252;
+  --mist: #6e797e;
+  --cloud: #f6f7f8;
+  --snow: #fafafa;
+  --haze: #d4d7da;
 }
 
 .dark {
@@ -203,6 +215,25 @@
   --radius-card-lg: var(--radius-card-lg);
   --radius-card-xl: var(--radius-card-xl);
   --radius-panel: var(--radius-panel);
+  --color-stone: var(--stone);
+  --color-mist: var(--mist);
+  --color-cloud: var(--cloud);
+  --color-snow: var(--snow);
+  --color-haze: var(--haze);
+
+  /*
+   * As quatro curvas do v3, como utilitários `ease-*`. Cada uma tem um papel
+   * fixo, e é o papel que dá o nome:
+   *
+   *   reveal  entrada do hero e revelação ao scroll
+   *   fill    o painel que sobe nos botões
+   *   roll    o rótulo e o glifo que rolam nos botões
+   *   soft    tudo o resto (acordeão, contornos, cursor)
+   */
+  --ease-reveal: cubic-bezier(0.165, 0.84, 0.44, 1);
+  --ease-fill: cubic-bezier(0.4, 0, 0, 1);
+  --ease-roll: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-soft: cubic-bezier(0.22, 1, 0.36, 1);
 
   --shadow-2xs: var(--shadow-2xs);
   --shadow-xs: var(--shadow-xs);
@@ -302,9 +333,9 @@
     }
   }
 
-  /* Alvos de âncora param 120px abaixo do topo (livre da navbar fixa). */
+  /* Alvos de âncora param 96px abaixo do topo: a navbar do v3 mede 88px. */
   [id] {
-    scroll-margin-top: 120px;
+    scroll-margin-top: 96px;
   }
 }
 
@@ -348,8 +379,9 @@
 /*
  * Sem `will-change: transform`.
  *
- * Nenhum destes dois elementos anima o próprio transform — quem anima é o
- * `div` interno do Parallax. `will-change` num elemento cujo transform nunca
+ * Nenhum destes dois elementos anima o próprio transform de forma contínua — o
+ * vídeo só escala uma vez, na revelação (`data-rv="grow"`). `will-change` num
+ * elemento cujo transform quase nunca
  * muda é uma promessa que nunca se cumpre: o browser reserva e mantém uma
  * camada de composição pela vida inteira da página, em dois elementos de
  * largura total, no aparelho onde essa memória é mais escassa.
@@ -538,23 +570,15 @@ html.reveal-failsafe [data-reveal] {
  *
  * `opacity` está deliberadamente FORA. Sob movimento reduzido o fade é o que
  * se quer preservar; o que a preferência pede para remover é deslocamento.
- * Consequência aceita: `text-reveal` anima apenas `y`, então lá não sobra
- * animação nenhuma — as palavras aparecem no estado final, legíveis, sem
- * transição. Registrado no delta de `scroll-reveal-animations`.
  *
- * `[data-parallax]` é marcador próprio e não `[data-reveal]` de propósito: o
- * parallax nunca é invisível, só deslocado, e marcá-lo com `data-reveal`
- * mentiria sobre o atributo e o sujeitaria à rede de segurança acima sem
- * necessidade. O nome é específico para recusar virar o balde onde todo
- * `transform` decorativo cai — inclusive `transform` que sirva a layout, que
- * esta regra quebraria. Um segundo caso legítimo ganha o seu próprio
- * marcador.
+ * Desde o v3 nenhuma primitiva do site usa este caminho: tudo revela pelo
+ * bloco "Motion v3" no fim do ficheiro, que já nasce sem estado oculto sob
+ * movimento reduzido. A regra fica como rede para um `[data-reveal]` futuro.
  */
 
 @media (prefers-reduced-motion: reduce) {
   /* biome-ignore lint/style/noDescendingSpecificity: a especificidade menor que a da rede de segurança acima é inofensiva aqui — as duas declaram `transform: none !important` com o MESMO valor, então quando ambas casam a de cima vence sem alterar o resultado. Esta regra nunca precisa sobrepor aquela. */
-  [data-reveal],
-  [data-parallax] {
+  [data-reveal] {
     /* biome-ignore lint/complexity/noImportantStyles: vencer o `style` inline do motion é o mecanismo, não um acidente */
     transform: none !important;
   }
@@ -574,8 +598,8 @@ html.reveal-failsafe [data-reveal] {
  * Não dá para expressar isso em classes utilitárias inline do Tailwind, porque
  * `@supports` não existe naquele nível — daí a classe nomeada.
  *
- * O `color` nos filhos diretos é reposto porque `color` é herdado: sem isso, o
- * `<CursorGlow>` que vive dentro do `<h1>` do Hero herdaria a transparência.
+ * O `color` nos filhos diretos é reposto porque `color` é herdado: sem isso, um
+ * elemento dentro do título herdaria a transparência.
  */
 
 .gradient-text {
@@ -592,5 +616,393 @@ html.reveal-failsafe [data-reveal] {
 
   .gradient-text > * {
     color: var(--foreground);
+  }
+}
+
+/* A mesma regra sobre fundo escuro: o "Ready to build?" do footer v3. */
+.gradient-text-inverse {
+  color: #ffffff;
+}
+
+@supports (background-clip: text) or (-webkit-background-clip: text) {
+  .gradient-text-inverse {
+    background-image: linear-gradient(to right, #ffffff, #9aa3a8);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+ * Motion v3
+ *
+ * Os valores vêm do artboard "v3 · EN" (`openspec/design/v3 · EN-html`). O
+ * mockup resolve tudo em CSS e usa um só observer que acrescenta classes, e o
+ * site faz o mesmo: o React decide QUANDO, a folha de estilo decide COMO.
+ * ══════════════════════════════════════════════════════════════════════════ */
+
+/*
+ * Entrada do hero, no mount e sem JavaScript.
+ *
+ * É uma animação de CSS e não uma transição, para correr igual com o bundle
+ * bloqueado: o estado inicial só existe enquanto a animação corre, e o
+ * `both` deixa o estado final no fim. Nada aqui depende de `.js`, por isso a
+ * rede de segurança acima (`[data-reveal]`) não se aplica e o atributo é
+ * outro de propósito — se fosse o mesmo, `html:not(.js)` cancelava a entrada
+ * em toda a primeira pintura, que é quando ela acontece.
+ *
+ * `data-enter="solid"` é o H1. Ele é o LCP, e um LCP com `opacity: 0` só
+ * conta quando fica visível: sobe, mas é pintado no primeiro frame (P1 da
+ * Motion spec do canvas). Os outros entram com fade.
+ */
+@keyframes enter-up {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 100px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes enter-up-solid {
+  from {
+    transform: translate3d(0, 100px, 0);
+  }
+  to {
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  [data-enter] {
+    animation: enter-up 1s var(--ease-reveal) both;
+    animation-delay: var(--enter-delay, 0s);
+  }
+
+  [data-enter="solid"] {
+    animation-name: enter-up-solid;
+  }
+}
+
+/*
+ * Revelação ao scroll, uma só vez (`Reveal`).
+ *
+ * O estado vive no próprio atributo, escrito pelo React: `idle` é o HTML do
+ * servidor, `out` é "abaixo da dobra, à espera", `in` é revelado. Só `out`
+ * esconde, e só o efeito do componente o escreve — depois de hidratado. Sem
+ * JavaScript, com o bundle bloqueado ou com a hidratação morta, nada sai de
+ * `idle` e nada começa oculto: é a garantia de `text-visibility-guarantees`
+ * por construção, sem precisar da rede de segurança acima.
+ *
+ * Dois marcadores, porque há dois casos:
+ *
+ *   [data-rv]          o elemento é observado e anima-se a si mesmo.
+ *   [data-rv-group]    o contentor é observado e os `[data-rv-item]` lá
+ *                      dentro animam com o atraso de `--rv-delay`. É o caso
+ *                      das grelhas do painel escuro: os cartões vivem dentro
+ *                      de um `clip-path`, e observar o cartão em vez do
+ *                      contentor é o deadlock que `scroll-reveal-animations`
+ *                      proíbe.
+ *
+ * `[data-rv-grow]` é o vídeo dos serviços, que entra por escala.
+ *
+ * Tudo dentro de `no-preference`: com movimento reduzido nenhuma regra casa e
+ * o conteúdo está no estado final desde o primeiro frame.
+ */
+@media (prefers-reduced-motion: no-preference) {
+  [data-rv],
+  [data-rv-group] [data-rv-item] {
+    transition:
+      opacity 1s var(--ease-reveal),
+      transform 1s var(--ease-reveal);
+    transition-delay: var(--rv-delay, 0s);
+  }
+
+  [data-rv="out"],
+  [data-rv-group="out"] [data-rv-item] {
+    opacity: 0;
+    transform: translate3d(0, 36px, 0);
+  }
+
+  [data-rv="out"][data-rv-grow] {
+    transform: scale(0.75);
+  }
+}
+
+/*
+ * Texto que acende letra a letra com o scroll (`LitText`).
+ *
+ * A opacidade 1 é a declaração base e a animação só existe dentro do
+ * `@supports`: sem `animation-timeline` (Firefox), sem CSS de animação ou sob
+ * movimento reduzido, o texto fica legível desde o primeiro frame.
+ *
+ * O intervalo é o do mockup: começa com o topo do bloco a 85% da viewport e
+ * acaba com o fundo a 35%. Em `cover` (que mede 100vh + a altura do bloco)
+ * isso é começar a 15vh e durar `100% - 50vh`; a letra `i` de `n` acende na
+ * fatia `[i/n, (i+1)/n]` desse intervalo.
+ *
+ * Nenhum antepassado pode ter `overflow: hidden`: faz dele um scroll container
+ * que não rola, e o `view-timeline` fica preso. Para recortar, `overflow-clip`.
+ */
+.lit {
+  display: block;
+  --start: 15vh;
+  --span: calc(100% - 50vh);
+}
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .lit {
+      view-timeline-name: --lit;
+    }
+
+    .lit-c {
+      animation: lit-in linear both;
+      animation-timeline: --lit;
+      animation-range-start: cover
+        calc(var(--start) + var(--span) * var(--i) / var(--n));
+      animation-range-end: cover
+        calc(var(--start) + var(--span) * (var(--i) + 1) / var(--n));
+    }
+  }
+}
+
+@keyframes lit-in {
+  from {
+    opacity: 0.22;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/*
+ * Rótulo que rola no hover (`RollText`): duas cópias empilhadas na mesma
+ * célula de grid, a segunda `aria-hidden`. Dispara pelo link ou botão que o
+ * contém, e também com foco de teclado — o efeito não pode ser só de rato.
+ */
+.roll {
+  display: inline-grid;
+  overflow: hidden;
+  vertical-align: bottom;
+}
+
+.roll > span {
+  grid-area: 1 / 1;
+  white-space: nowrap;
+  transition:
+    transform 0.38s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.38s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.roll > span + span {
+  transform: translateY(100%);
+  opacity: 0;
+}
+
+:is(a, button):is(:hover, :focus-visible) .roll > span:first-child {
+  transform: translateY(-100%);
+  opacity: 0;
+}
+
+:is(a, button):is(:hover, :focus-visible) .roll > span + span {
+  transform: none;
+  opacity: 1;
+}
+
+/* A seta que acompanha um link com roll: sobe na diagonal, ou avança. */
+.roll-arrow {
+  display: inline-flex;
+  transition: transform 0.38s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+:is(a, button):is(:hover, :focus-visible) .roll-arrow {
+  transform: translate(3px, -3px);
+}
+
+:is(a, button):is(:hover, :focus-visible) .roll-arrow[data-dir="x"] {
+  transform: translateX(4px);
+}
+
+/*
+ * Marquee contínuo, em CSS.
+ *
+ * A lista vai duplicada uma vez e a faixa anda metade da sua largura, que é
+ * exactamente uma cópia: o fim de um ciclo coincide com o início do seguinte.
+ *
+ * `data-paused` é escrito pelo `MarqueePause` quando a faixa sai da viewport ou
+ * a aba fica oculta. Uma animação de CSS fora do ecrã continua a ser
+ * composta, e `idle-runtime-budget` pede que seja desassinada, não ignorada.
+ */
+@keyframes marquee-half {
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+.marquee-track {
+  animation: marquee-half 45s linear infinite;
+}
+
+.marquee:hover .marquee-track,
+.marquee[data-paused] .marquee-track {
+  animation-play-state: paused;
+}
+
+/*
+ * O acordeão do FAQ abre por `grid-template-rows` e não por `height`.
+ *
+ * Keyframes e não transição porque o Radix só desmonta o conteúdo fechado no
+ * `animationend`: com uma transição ele sumia no primeiro frame do fecho. Sem
+ * `forceMount`, as respostas fechadas não estão no DOM do servidor, o que
+ * mantém a promessa de `text-visibility-guarantees` ("todo texto presente no
+ * DOM está visível") sem JavaScript.
+ */
+@keyframes faq-open {
+  from {
+    grid-template-rows: 0fr;
+  }
+  to {
+    grid-template-rows: 1fr;
+  }
+}
+
+@keyframes faq-close {
+  from {
+    grid-template-rows: 1fr;
+  }
+  to {
+    grid-template-rows: 0fr;
+  }
+}
+
+.faq-body {
+  display: grid;
+  grid-template-rows: 1fr;
+}
+
+.faq-body[data-state="open"] {
+  animation: faq-open 0.45s var(--ease-soft);
+}
+
+.faq-body[data-state="closed"] {
+  animation: faq-close 0.45s var(--ease-soft);
+}
+
+/* A resposta entra em duas curvas, como no v3: o fade é mais curto que o
+   deslocamento, para o texto já estar legível enquanto acaba de assentar. */
+@keyframes faq-text-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes faq-text-drop {
+  from {
+    transform: translateY(-8px);
+  }
+}
+
+.faq-body[data-state="open"] .faq-text {
+  animation:
+    faq-text-fade 0.3s ease 0.08s both,
+    faq-text-drop 0.45s var(--ease-soft) 0.08s both;
+}
+
+/*
+ * Cursor personalizado. O círculo é desenhado no tamanho MAIOR (80px) e
+ * reduzido por `scale`, pela mesma razão que o `CursorFollower` anterior
+ * documentava: rasterizar grande e reduzir sai nítido, o contrário sai
+ * borrado, e `scale` não sai da etapa de composição.
+ */
+.cursor-dot {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 9999;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.cursor-dot::before {
+  content: "";
+  position: absolute;
+  left: -40px;
+  top: -40px;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: var(--primary);
+  transform: scale(0.15);
+  transition:
+    transform 0.55s var(--ease-soft),
+    opacity 0.35s,
+    background-color 0.25s;
+}
+
+.cursor-dot:not([data-on]) {
+  opacity: 0;
+}
+
+.cursor-dot[data-tone="light"]::before {
+  background: #ffffff;
+}
+
+.cursor-dot[data-mode="link"]::before {
+  transform: scale(0.4);
+  opacity: 0.16;
+}
+
+.cursor-dot[data-mode="button"]::before {
+  transform: scale(0.4);
+}
+
+.cursor-dot[data-mode="text"]::before {
+  transform: scale(1);
+}
+
+.cursor-dot-label {
+  position: absolute;
+  left: 0;
+  top: 0;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  opacity: 0;
+  transform: translate(-50%, -50%) translateY(6px);
+  transition:
+    opacity 0.35s,
+    transform 0.35s;
+}
+
+.cursor-dot[data-tone="light"] .cursor-dot-label {
+  color: var(--primary);
+}
+
+.cursor-dot[data-mode="text"] .cursor-dot-label {
+  opacity: 1;
+  transform: translate(-50%, -50%);
+}
+
+/* Movimento reduzido: nada de rolar, de marquee nem de acordeão animado. */
+@media (prefers-reduced-motion: reduce) {
+  .roll > span,
+  .roll-arrow {
+    transition: none;
+  }
+
+  .marquee-track {
+    animation: none;
+  }
+
+  .faq-body[data-state],
+  .faq-body[data-state="open"] .faq-text {
+    animation: none;
   }
 }

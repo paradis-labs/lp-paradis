@@ -54,7 +54,6 @@ function Matrix({ surface }: { surface: "light" | "dark" }) {
             key={variant}
             variant={variant}
             trailingIcon={ArrowRightDown}
-            iconProps={{ size: 20 }}
             circleIcon
             textSwap
           >
@@ -77,25 +76,38 @@ function Matrix({ surface }: { surface: "light" | "dark" }) {
         ))}
       </Row>
 
-      <Row title="magnetic — as combinações reais da home">
+      <Row title="tamanhos — sm (navbar, 1,5px) · default (hero, 2px) · lg (footer, 1,5px)">
+        {(["sm", "default", "lg"] as const).map((size) => (
+          <Button
+            key={size}
+            variant="primary"
+            size={size}
+            trailingIcon={ArrowRightDown}
+            circleIcon
+            textSwap
+          >
+            <span>{size}</span>
+          </Button>
+        ))}
+      </Row>
+
+      <Row title="as combinações reais da home">
         <Button
           variant="outline"
           trailingIcon={ArrowRightDown}
           circleIcon
-          magnetic
           textSwap
         >
-          <span>CTA Serviços (page.tsx)</span>
+          <span>CTA About (page.tsx)</span>
         </Button>
         <Button
           variant="inverted"
-          size="lg"
           trailingIcon={ArrowRight}
-          iconProps={{ size: 24 }}
-          magnetic
+          circleIcon
           textSwap
+          className="border-[1.5px] pl-8 font-semibold"
         >
-          <span>CTA Produtos (ProductsSection)</span>
+          <span>View All (ProductsSection)</span>
         </Button>
       </Row>
 
@@ -107,17 +119,15 @@ function Matrix({ surface }: { surface: "light" | "dark" }) {
         ))}
       </Row>
 
-      <Row title="href + circleIcon + magnetic — o CTA do Hero depois da fiação">
+      <Row title="href + circleIcon — o CTA primário do Hero; /get-quote navega pelo Link">
         <Button
-          variant="outline"
-          href="#href-ancora"
+          variant="primary"
+          href="/en/get-quote"
           trailingIcon={ArrowRightDown}
-          iconProps={{ size: 20 }}
           circleIcon
-          magnetic
           textSwap
         >
-          <span>Schedule a Call</span>
+          <span>Get Quote - For Free</span>
         </Button>
         <Button
           variant="primary"
@@ -133,7 +143,7 @@ function Matrix({ surface }: { surface: "light" | "dark" }) {
           pills de interesse de `/get-quote`) e porque o seu estado é
           `aria-pressed`, que as linhas acima não exercitam. Passe o rato nas
           duas: a não seleccionada sobe painel escuro e inverte o texto; a
-          seleccionada já é escura, o painel não se vê e só o rótulo desliza. */}
+          seleccionada já é escura, o painel não se vê e só o rótulo rola. */}
       {surface === "light" ? (
         <Row title="pill — aria-pressed false / true (as pills de /get-quote)">
           <Button
@@ -163,8 +173,8 @@ function Matrix({ surface }: { surface: "light" | "dark" }) {
         </Row>
       ) : null}
 
-      {/* Controle: sem `textSwap` não se passa pelo `swapInvert`. Estes têm de
-          ficar exactamente como estavam antes da change — é o botão do rodapé. */}
+      {/* Controle: sem `textSwap` não se passa pelo `swapInvert`. No v3 nenhum
+          CTA do site usa este caminho — fica como referência do hover da cva. */}
       <Row title="controle — sem textSwap (caminho da cva, não deve ter mudado)">
         {VARIANTS.map((variant) => (
           <Button key={variant} variant={variant}>
@@ -184,7 +194,9 @@ export default async function ButtonsFixturePage() {
   return (
     <main className="flex flex-col gap-8 bg-neutral-100 p-8">
       <header className="text-neutral-900">
-        <h1 className="text-2xl font-semibold">Button — inversão no hover</h1>
+        <h1 className="text-2xl font-semibold">
+          Button — o hover do v3 (painel em arco, rótulo e disco que rolam)
+        </h1>
         <p className="mt-2 max-w-3xl text-sm text-neutral-700">
           Fixture só de desenvolvimento. O hover <strong>não</strong> está
           forçado — passe o rato. Cada variante aparece sobre os dois fundos

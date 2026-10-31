@@ -24,6 +24,10 @@ import type {
   NavBar,
   NavButton,
   NavLink,
+  ProductIcon,
+  ProductPage,
+  ProductStep,
+  ProductsPage,
   Project,
   QuotePage,
   QuoteRequestInput,
@@ -31,6 +35,7 @@ import type {
   Testimonial,
   TestimonialSocial,
 } from "../types";
+import { PRODUCT_ICONS } from "../types";
 
 // O provider hcms: o site lido do Directus partilhado em `hcms.paradis.host`
 // (site `paradis`), com as mesmas funções e garantias do provider Payload.
@@ -602,6 +607,7 @@ export async function getNavBar(locale: Locale): Promise<NavBar> {
       where,
       "buttons",
     ) satisfies NavButton[],
+    socialLinks: siteSocialLinks(site, where),
   };
 }
 
@@ -659,6 +665,36 @@ const footerSocial = z.object({
   label: z.string().min(1),
 });
 
+// As redes do item `sites`, partilhadas pelo footer e pelo menu mobile do
+// navbar. Uma só função, para as duas leituras não poderem divergir na ordem
+// nem no que descartam — `footer-direct-contact-band` promete ao editor a
+// ordem authorada nos dois sítios.
+function siteSocialLinks(
+  site: Awaited<ReturnType<typeof readSite>>,
+  where: Where,
+): FooterSocialLink[] {
+  const siteName = site.name ?? "Paradis";
+  return keepValid(
+    footerSocial,
+    (site.social_links ?? []).flatMap((raw, index) => {
+      const social = rawSocial.safeParse(raw);
+      if (!social.success || (social.data.state ?? "live") !== "live")
+        return [];
+      const platform = toPlatform(social.data.platform);
+      return [
+        {
+          key: `${index}:${social.data.url}`,
+          platform,
+          url: social.data.url,
+          label: socialLabel(siteName, platform, where.locale),
+        },
+      ];
+    }),
+    where,
+    "socialLinks",
+  );
+}
+
 export async function getFooter(locale: Locale): Promise<Footer> {
   const where = { slug: "footer", locale };
   const language = LANGUAGES[locale];
@@ -708,26 +744,7 @@ export async function getFooter(locale: Locale): Promise<Footer> {
     };
   };
 
-  const siteName = site.name ?? "Paradis";
-  const socialLinks = keepValid(
-    footerSocial,
-    (site.social_links ?? []).flatMap((raw, index) => {
-      const social = rawSocial.safeParse(raw);
-      if (!social.success || (social.data.state ?? "live") !== "live")
-        return [];
-      const platform = toPlatform(social.data.platform);
-      return [
-        {
-          key: `${index}:${social.data.url}`,
-          platform,
-          url: social.data.url,
-          label: socialLabel(siteName, platform, locale),
-        },
-      ];
-    }),
-    where,
-    "socialLinks",
-  ) satisfies FooterSocialLink[];
+  const socialLinks = siteSocialLinks(site, where);
 
   return {
     logo: site.logo_inverse,
@@ -816,6 +833,9 @@ const project = z.object({
   coverImage: z.custom<Media | null>(),
   url: z.string().min(1),
   linkLabel: z.string().nullable(),
+  slug: z.string().nullable(),
+  category: z.string().nullable(),
+  tags: z.array(z.string()),
 });
 
 const testimonial = z.object({
@@ -866,6 +886,62 @@ const toTestimonialSocial = (value: unknown): TestimonialSocial =>
 
 // ── Homepage ───────────────────────────────────────────────────────────────
 
+// Os campos dos `projects` que o site lê, partilhados pela homepage e pela
+// listagem de produtos.
+const PROJECT_FIELDS = [
+  "url",
+  "tags",
+  "category.translations.*",
+  ...fileFields("image"),
+];
+
+// E os da página de detalhe (`seed-paradis-v3` no template). Só a leitura do
+// detalhe os pede: o Directus responde 403 ao pedido inteiro quando um campo
+// não existe, e as outras leituras não precisam deles.
+const PRODUCT_FIELDS = [
+  ...PROJECT_FIELDS,
+  "gallery.sort",
+  ...fileFields("gallery.directus_files_id"),
+  "testimonial.id",
+  "testimonial.author_name",
+  "testimonial.platform",
+  "testimonial.date",
+  "testimonial.date_updated",
+  "testimonial.date_created",
+  "testimonial.translations.*",
+  ...fileFields("testimonial.avatar"),
+];
+
+// O mapeamento de um projecto para o domínio, partilhado pelas duas leituras
+// para elas não poderem divergir no que mostram nem no que descartam.
+function toProjects(
+  records: Awaited<ReturnType<typeof readCollection>>,
+  where: Where,
+  path: string,
+): Project[] {
+  const language = LANGUAGES[where.locale];
+  return keepValid(
+    project,
+    records.map((record) => ({
+      key: record.id,
+      title: tr(record, "title", language),
+      description: tr(record, "summary", language),
+      coverImage: rawFile.parse(record.image),
+      url: asString(record.url),
+      linkLabel: tr(record, "link_label", language),
+      // O slug é o de `en-US` nos dois idiomas, como nos serviços: a rota
+      // `/products/<slug>` é a mesma em `/en` e em `/pt`.
+      slug: tr(record, "slug", DEFAULT_LANGUAGE),
+      category: tr(record.category as Translated, "name", language),
+      tags: Array.isArray(record.tags)
+        ? record.tags.filter((tag): tag is string => typeof tag === "string")
+        : [],
+    })),
+    where,
+    path,
+  );
+}
+
 export async function getHomepage(locale: Locale): Promise<Homepage> {
   const where = { slug: "homepage", locale };
   const language = LANGUAGES[locale];
@@ -873,7 +949,7 @@ export async function getHomepage(locale: Locale): Promise<Homepage> {
     await Promise.all([
       readPages(where, ["home"]),
       readServices(where),
-      readCollection("projects", ["url", ...fileFields("image")], where),
+      readCollection("projects", PROJECT_FIELDS, where),
       readCollection(
         "testimonials",
         [
@@ -942,19 +1018,7 @@ export async function getHomepage(locale: Locale): Promise<Homepage> {
       title: tr(productsItem, "title", language),
       subtitle: tr(productsItem, "lead", language),
       primaryCta: cta(productsItem, 0, language, slugs),
-      items: keepValid(
-        project,
-        projects.map((record) => ({
-          key: record.id,
-          title: tr(record, "title", language),
-          description: tr(record, "summary", language),
-          coverImage: rawFile.parse(record.image),
-          url: asString(record.url),
-          linkLabel: tr(record, "link_label", language),
-        })),
-        where,
-        "projects.items",
-      ) satisfies Project[],
+      items: toProjects(projects, where, "projects.items"),
     },
     testimonials: {
       enabled: testimonialsBlock.enabled,
@@ -962,19 +1026,7 @@ export async function getHomepage(locale: Locale): Promise<Homepage> {
       subtitle: tr(testimonialsBlock.block?.item, "lead", language),
       items: keepValid(
         testimonial,
-        testimonials.map((record) => ({
-          key: record.id,
-          authorName: asString(record.author_name),
-          tag: tr(record, "author_role", language) ?? "",
-          social: toTestimonialSocial(record.platform),
-          avatar: rawFile.parse(record.avatar),
-          quote: tr(record, "quote", language),
-          // A data do testemunho, se o editor a deu; senão a da última edição,
-          // como no Payload.
-          date: asString(
-            record.date ?? record.date_updated ?? record.date_created,
-          ),
-        })),
+        testimonials.map((record) => toTestimonial(record, language)),
         where,
         "testimonials.items",
       ) satisfies Testimonial[],
@@ -1003,6 +1055,123 @@ export async function getHomepage(locale: Locale): Promise<Homepage> {
         }),
       ),
     },
+  };
+}
+
+// Um testemunho do hcms no domínio, partilhado pela homepage e pelo detalhe de
+// produto.
+function toTestimonial(record: RawRecord, language: Language) {
+  return {
+    key: record.id,
+    authorName: asString(record.author_name),
+    tag: tr(record, "author_role", language) ?? "",
+    social: toTestimonialSocial(record.platform),
+    avatar: rawFile.parse(record.avatar),
+    quote: tr(record, "quote", language),
+    // A data do testemunho, se o editor a deu; senão a da última edição, como
+    // no Payload.
+    date: asString(record.date ?? record.date_updated ?? record.date_created),
+  };
+}
+
+// ── Página de produtos ─────────────────────────────────────────────────────
+
+// A listagem `/products`. O cabeçalho reutiliza o bloco `#products` da página
+// `home`: o texto do mockup é exactamente o da secção, e uma página própria no
+// hcms obrigaria a mexer no seed do template para uma página só com cabeçalho.
+// Consequência deliberada: editar o título da secção muda o H1 de `/products`,
+// e o `hide_block` da secção não esconde a página.
+export async function getProductsPage(locale: Locale): Promise<ProductsPage> {
+  const where = { slug: "products-page", locale };
+  const language = LANGUAGES[locale];
+  const [{ pages }, projects] = await Promise.all([
+    readPages(where, ["home"]),
+    readCollection("projects", PROJECT_FIELDS, where),
+  ]);
+  const block = findBlock(pages.get("home"), "block_collection", "products")
+    .block?.item;
+
+  return {
+    eyebrow: tr(block, "eyebrow", language),
+    title: tr(block, "title", language),
+    lead: tr(block, "lead", language),
+    items: toProjects(projects, where, "items"),
+  };
+}
+
+// ── Detalhe de produto ─────────────────────────────────────────────────────
+
+// Um ícone que o site não conhece fica `null`: o cartão renderiza sem ele.
+function productIcon(value: unknown): ProductIcon | null {
+  return PRODUCT_ICONS.find((icon) => icon === value) ?? null;
+}
+
+const productStep = z.object({
+  icon: z.enum(PRODUCT_ICONS).nullable(),
+  title: z.string().min(1),
+  body: z.string().nullable(),
+});
+
+// O detalhe de `/products/<slug>` e os outros projectos, para "More Products".
+// Uma só leitura dos projectos (são poucos) serve as duas coisas. `null` quando
+// nenhum projecto publicado tem aquele slug: a rota responde 404.
+export async function getProduct(
+  locale: Locale,
+  slug: string,
+): Promise<ProductPage | null> {
+  const where = { slug: `product:${slug}`, locale };
+  const language = LANGUAGES[locale];
+  const records = await readCollection("projects", PRODUCT_FIELDS, where);
+  const projects = toProjects(records, where, "projects");
+  const index = projects.findIndex((candidate) => candidate.slug === slug);
+  if (index === -1) return null;
+
+  const record = records.find(
+    (candidate) => candidate.id === projects[index].key,
+  );
+  if (!record) return null;
+
+  const testimonialRecord = rawRecord.safeParse(record.testimonial);
+  const testimonials = testimonialRecord.success
+    ? keepValid(
+        testimonial,
+        [toTestimonial(testimonialRecord.data, language)],
+        where,
+        "testimonial",
+      )
+    : [];
+
+  const gallery = (Array.isArray(record.gallery) ? record.gallery : [])
+    .map((entry) =>
+      rawFile.parse(
+        (entry as { directus_files_id?: unknown })?.directus_files_id,
+      ),
+    )
+    .filter((media): media is Media => media !== null);
+
+  return {
+    product: {
+      ...projects[index],
+      market: tr(record, "market", language),
+      platform: tr(record, "platform", language),
+      challenge: tr(record, "challenge", language),
+      solution: tr(record, "solution", language),
+      steps: keepValid(
+        productStep,
+        trList(record, "steps", language).map((step) => ({
+          icon: productIcon((step as { icon?: unknown })?.icon),
+          title: asString((step as { title?: unknown })?.title),
+          body: (step as { body?: unknown })?.body
+            ? asString((step as { body?: unknown }).body)
+            : null,
+        })),
+        where,
+        "steps",
+      ) satisfies ProductStep[],
+      gallery,
+      testimonial: (testimonials[0] as Testimonial | undefined) ?? null,
+    },
+    others: projects.filter((_, position) => position !== index),
   };
 }
 
@@ -1093,6 +1262,9 @@ export async function getQuotePage(locale: Locale): Promise<QuotePage> {
       emailLabel: tr(field("email"), "label", language),
       interestsLabel: tr(field("interests"), "label", language),
       interests,
+      company: field("company")
+        ? { label: tr(field("company"), "label", language) }
+        : null,
       messageLabel: tr(field("message"), "label", language),
       submitLabel: tr(form, "submit_label", language),
       privacyNote: tr(form, "privacy_note", language),
@@ -1180,9 +1352,15 @@ export async function findServicesBySlugs(
 export async function createQuoteRequest(
   input: QuoteRequestInput,
 ): Promise<void> {
-  const form = await readForm({ slug: "quote-request", locale: "en" }, false);
+  // Com campos: é a lista de `form_fields` que diz se a empresa vai. Uma
+  // chave em `data` sem campo correspondente tem comportamento não confirmado
+  // no hcms, e esta é a única escrita pública do site — não se arrisca.
+  const form = await readForm({ slug: "quote-request", locale: "en" }, true);
   if (!form)
     throw new Error(`[content] hcms: formulário "${FORM_KEY}" em falta`);
+  const acceptsCompany = Boolean(
+    form.fields?.some((candidate) => candidate.name === "company"),
+  );
 
   formClient ??= createClient(env("TOKEN_SECRET_FORM"));
   await formClient.request(
@@ -1198,6 +1376,9 @@ export async function createQuoteRequest(
           email: input.email,
           interests: input.services.map((entry) => entry.slug),
           message: input.message,
+          ...(acceptsCompany && input.company
+            ? { company: input.company }
+            : {}),
         },
       } as never,
       { fields: ["id"] } as never,
