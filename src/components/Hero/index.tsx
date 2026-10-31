@@ -1,109 +1,89 @@
-"use client";
-import { motion } from "motion/react";
+import { ArrowRightDown } from "@solar-icons/react";
 import type { Hero as Herotype } from "@/content";
-import { cn } from "@/lib/utils";
 import CalendlyCta from "../CalendlyCta";
-import { CursorGlow } from "../ui/cursor-glow";
 import { GridPattern } from "../ui/grid-pattern";
 
 interface HeroProps extends Herotype {
   // Os destinos dos dois CTAs, JÁ resolvidos pelo servidor: prefixo de locale
   // aplicado ao que é interno, `undefined` quando não há destino authorado.
-  //
-  // Props separadas em vez de se usar `args.primaryCta.url` directamente porque
-  // este componente é cliente e não recebe o locale — e resolvê-lo aqui
-  // obrigaria a importar `@/i18n`, que é o custo que `lib/locale-href.ts`
-  // documenta ter medido em 33,6 KB.
   primaryCtaHref?: string;
   secondaryCtaHref?: string;
 }
 
-export default function Hero(args: HeroProps) {
-  // `prefers-reduced-motion` é atendido em CSS, não aqui — a regra no fim de
-  // `globals.css` neutraliza o deslocamento de todo `[data-reveal]`, e os itens
-  // deste container carregam o atributo. Consultar a preferência no corpo da
-  // renderização divergia a hidratação; ver `@/lib/use-reduced-motion`.
-  //
-  // O `staggerChildren` era zerado sob a preferência e agora é fixo. Duas
-  // razões: nunca foi fonte de divergência (o container tem `hidden: {}`, que
-  // não serializa `style` nenhum), e com o deslocamento neutralizado o que
-  // resta escalonado é opacidade — um fade escalonado por 0,1s é movimento
-  // reduzido por qualquer definição razoável.
-  const container = {
-    hidden: {},
-    show: {
-      transition: { staggerChildren: 0.1 },
-    },
-  };
-  const item = {
-    hidden: { opacity: 0, y: 16 },
-    show: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] as const },
-    },
-  };
+const delay = (seconds: number) =>
+  ({ "--enter-delay": `${seconds}s` }) as React.CSSProperties;
 
+// O hero do v3. Server component: a entrada em sequência é uma animação de CSS
+// (`[data-enter]` em `globals.css`) e corre sem JavaScript, por isso já não há
+// `motion` aqui nem estado inicial serializado no HTML.
+//
+// O H1 entra só por deslocamento (`data-enter="solid"`): é o LCP, e um LCP com
+// `opacity: 0` só conta quando aparece (`scroll-reveal-animations`, "O H1 do
+// hero é pintado no primeiro frame"). O mockup anima-o com fade; o desvio é
+// deliberado.
+//
+// O `CursorGlow` que vivia dentro do H1 saiu com o cursor novo. Levava
+// `cursor: none` no título, que estragava a selecção de texto.
+export default function Hero(args: HeroProps) {
   return (
-    <div className="bg-background relative flex size-full items-center justify-center overflow-hidden rounded-lg border p-4 sm:p-10 lg:p-20">
+    <section className="relative m-2 flex items-center justify-center overflow-hidden rounded-2xl border bg-white p-3 md:m-4 md:px-10 md:py-14 xl:px-20 xl:py-18">
       <GridPattern
         width={90}
         height={30}
         x={-1}
         y={-1}
-        className={cn(
-          "mask-[radial-gradient(ellipse_80%_80%_at_center,transparent,white)]",
-          "[-webkit-mask-image:radial-gradient(ellipse_80%_80%_at_center,transparent,white)]",
-        )}
+        className="mask-[radial-gradient(ellipse_80%_80%_at_center,transparent,white)]"
       />
-      <div className="relative z-10 text-center bg-background/90 p-4 sm:p-8 lg:p-10 rounded-xl">
-        <motion.div
-          className="mx-auto max-w-4xl py-10 lg:py-20 flex flex-col items-center gap-8"
-          variants={container}
-          initial="hidden"
-          animate="show"
-        >
-          <motion.h1
-            data-reveal
-            variants={item}
-            className="relative cursor-none font-gilroy text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight gradient-text leading-tight lg:leading-20"
+      <div className="relative z-10 rounded-2xl bg-white/90 p-5 text-center md:p-10">
+        <div className="mx-auto flex max-w-280 flex-col items-center gap-6 py-8 md:gap-7 md:py-16">
+          <h1
+            data-enter="solid"
+            style={delay(0.4)}
+            className="gradient-text max-w-275 font-gilroy text-4xl leading-[1.18] font-bold tracking-[-0.035em] text-balance md:text-5xl md:leading-[1.12] lg:text-[56px] xl:text-[64px]"
           >
             {args.headline}
-            <CursorGlow className="z-20" />
-          </motion.h1>
-          <motion.div data-reveal variants={item} className="max-w-lg">
-            <p className="text-lg text-primary leading-8">{args.description}</p>
-          </motion.div>
-          <motion.div
-            data-reveal
-            variants={item}
-            className="w-full max-w-106.5 flex flex-col sm:flex-row items-center justify-center gap-4"
+          </h1>
+          <p
+            data-enter
+            style={delay(0.5)}
+            className="max-w-135 text-lg leading-8 text-pretty text-primary"
           >
-            {args.primaryCta && (
+            {args.description}
+          </p>
+          <div
+            data-enter
+            style={delay(0.6)}
+            // 426px é a largura do mockup, mas como mínimo e não como máximo
+            // a partir de `md`: em PT os rótulos são mais compridos e, com
+            // teto, o segundo CTA caía para outra linha. Abaixo de `md`
+            // empilham a toda a largura, como no mockup.
+            className="flex w-full max-w-106.5 flex-wrap justify-center gap-4 md:w-auto md:max-w-none md:min-w-106.5 md:flex-nowrap"
+          >
+            {args.primaryCta.label && (
               <CalendlyCta
-                className="w-full"
+                className="flex-[1_1_100%] md:flex-auto"
                 variant="primary"
                 href={args.primaryCtaHref}
-                magnetic
+                trailingIcon={ArrowRightDown}
+                circleIcon
                 textSwap
               >
                 {args.primaryCta.label}
               </CalendlyCta>
             )}
-            {args.secondaryCta && (
+            {args.secondaryCta.label && (
               <CalendlyCta
-                className="w-full"
+                className="flex-[1_1_100%] md:flex-auto"
                 variant="outline"
                 href={args.secondaryCtaHref}
-                magnetic
                 textSwap
               >
                 {args.secondaryCta.label}
               </CalendlyCta>
             )}
-          </motion.div>
-        </motion.div>
+          </div>
+        </div>
       </div>
-    </div>
+    </section>
   );
 }

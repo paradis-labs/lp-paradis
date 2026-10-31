@@ -1,17 +1,15 @@
-import type { LucideIcon } from "lucide-react";
-import { ArrowUpRight, Dribbble, Instagram, Linkedin } from "lucide-react";
+import { ArrowRightDown } from "@solar-icons/react";
 import { cacheLife } from "next/cache";
 import Image from "next/image";
 import Link from "next/link";
 import type React from "react";
-import type {
-  FooterContactBand,
-  Footer as FooterContent,
-  FooterSocialLink,
-} from "@/content";
+import Reveal from "@/components/Reveal";
+import type { Footer as FooterContent, FooterSocialLink } from "@/content";
 import type { Locale } from "@/i18n/routing";
 import { localizedCtaHref } from "@/lib/locale-href";
+import { SOCIAL_ICONS } from "@/lib/social-platforms";
 import CalendlyCta from "../CalendlyCta";
+import RollText from "../RollText";
 
 type SocialLink = FooterSocialLink;
 
@@ -20,45 +18,6 @@ type SocialLink = FooterSocialLink;
 // ~200px de conteúdo num ecrã de 320px. Em `xl` cai para zero: o `max-width` do
 // `container` (1280px) já afasta o conteúdo das margens.
 const FOOTER_GUTTER = "px-6 sm:px-10 lg:px-14 xl:px-0";
-
-// Só as três plataformas que o mockup pede. O conjunto é fechado em código de
-// propósito: um mapa aberto sobre um namespace (`Icons[nome]` em cima de um
-// `import * as`) impede o tree-shaking, e é o erro que `Button/index.tsx`
-// documenta ter custado 12,7 MB. Plataforma fora do mapa cai no ramo textual de
-// `SocialIconLink`, então acrescentar uma é um import a mais e nada além disso.
-const SOCIAL_ICONS: Partial<Record<SocialLink["platform"], LucideIcon>> = {
-  dribbble: Dribbble,
-  linkedin: Linkedin,
-  instagram: Instagram,
-};
-
-// O nome visível dentro das pills da faixa de contacto direto. Cobre nove
-// plataformas contra as três de `SOCIAL_ICONS`, e a diferença não é descuido: um
-// ícone é um import de componente e paga bundle, uma string paga bytes. O custo
-// que o comentário acima documenta simplesmente não existe aqui, então não há
-// motivo para racionar entradas.
-//
-// `other` fica **deliberadamente de fora** — não há nome de marca a derivar de
-// "outro". Só nesse caso a pill cai no `label`, que é cópia imperfeita por ser o
-// nome acessível, mas visível. Omitir a pill seria o modo de falha que
-// `SocialIconLink` já nomeia como o pior possível.
-//
-// Isto não vem do CMS de propósito. O campo que lá existe para texto, `label`,
-// está documentado no admin como "not shown on screen" e foi authorado segundo
-// essa instrução — usá-lo aqui poria "Paradis on LinkedIn" dentro da pill sem
-// ninguém ter editado nada. Nomes de marca também não se traduzem, então derivar
-// em código não custa localização.
-const SOCIAL_NAMES: Partial<Record<SocialLink["platform"], string>> = {
-  dribbble: "Dribbble",
-  linkedin: "LinkedIn",
-  instagram: "Instagram",
-  github: "GitHub",
-  twitter: "Twitter",
-  facebook: "Facebook",
-  youtube: "YouTube",
-  discord: "Discord",
-  whatsapp: "WhatsApp",
-};
 
 // Os literais que antes estavam soltos no JSX. Eles não desaparecem — viram o
 // piso de cada campo, porque a leitura do CMS inverte o risco: antes o texto
@@ -81,8 +40,6 @@ const FALLBACK: Record<
     primaryLabel: string;
     outlineLabel: string;
     copyright: string;
-    reachHeading: string;
-    socialHeading: string;
   }
 > = {
   en: {
@@ -92,8 +49,6 @@ const FALLBACK: Record<
     primaryLabel: "Get Quote - For Free",
     outlineLabel: "Schedule a Call",
     copyright: "Paradis.Labs - All rights reserved.",
-    reachHeading: "Reach Us Directly",
-    socialHeading: "Elsewhere",
   },
   pt: {
     logoAlt: "Logótipo da Paradis",
@@ -102,8 +57,6 @@ const FALLBACK: Record<
     primaryLabel: "Pedir orçamento - Grátis",
     outlineLabel: "Agendar uma chamada",
     copyright: "Paradis Labs - Todos os direitos reservados.",
-    reachHeading: "Fale connosco directamente",
-    socialHeading: "Noutros sítios",
   },
 };
 
@@ -222,98 +175,14 @@ function SocialIconLink({ social }: { social: SocialLink }) {
       target="_blank"
       rel="noopener noreferrer"
       aria-label={social.label}
-      data-cursor="hover"
-      className="text-white/70 transition-colors duration-200 hover:text-white"
+      className="inline-flex size-10 items-center justify-center rounded-full border border-white/16 text-white/80 transition-colors duration-200 hover:border-white/50 hover:text-white"
     >
       {Icon ? (
-        <Icon aria-hidden="true" className="size-5" />
+        <Icon aria-hidden="true" className="size-4.5" />
       ) : (
-        <span className="text-sm font-normal">{social.label}</span>
+        <span className="text-xs font-normal">{social.label}</span>
       )}
     </a>
-  );
-}
-
-// Uma rede social na faixa, com o nome à vista. Difere de `SocialIconLink` só
-// nisso, e a diferença toda está no par `aria-label` + `aria-hidden`: o nome
-// visível ("Instagram") e o nome acessível ("Paradis Labs on Instagram")
-// divergem de propósito. Sem o `aria-label`, o leitor de ecrã anunciaria o nome
-// da plataforma — correto, mas menos informativo que o rótulo authorado.
-function SocialPill({ social }: { social: SocialLink }) {
-  const Icon = SOCIAL_ICONS[social.platform];
-  const name = SOCIAL_NAMES[social.platform] ?? social.label;
-
-  return (
-    <a
-      href={social.url}
-      target="_blank"
-      rel="noopener noreferrer"
-      aria-label={social.label}
-      data-cursor="hover"
-      className="inline-flex items-center gap-2 rounded-full border border-white/25 px-5 py-2.5 text-sm font-normal text-white transition-colors duration-200 hover:border-white/60"
-    >
-      {Icon && <Icon aria-hidden="true" className="size-4 shrink-0" />}
-      {name}
-    </a>
-  );
-}
-
-// A faixa que abre o footer na página de orçamento.
-//
-// Os dois grupos renderizam de forma independente, e é por isso que a condição
-// de cada um vive aqui dentro e não no chamador: um título sozinho, sem o
-// conteúdo que ele anuncia, é pior que a ausência do grupo inteiro. O chamador
-// só decide se a faixa existe de todo — quando não há nem e-mail nem redes, não
-// há faixa nem divider, e o footer fica indistinguível do das outras rotas.
-function ContactBand({
-  contactBand,
-  socialLinks,
-  locale,
-}: {
-  contactBand: FooterContactBand;
-  socialLinks: SocialLink[];
-  locale: Locale;
-}) {
-  const email = contactBand.email?.trim();
-  const fallback = FALLBACK[locale];
-
-  return (
-    <div
-      className={`container ${FOOTER_GUTTER} py-14 flex flex-col gap-10 border-b border-white/20 sm:flex-row sm:items-start sm:justify-between`}
-    >
-      {email && (
-        <div className="flex flex-col gap-4">
-          <span className="text-white/70 font-medium text-sm">
-            {textOr(contactBand.reachHeading, fallback.reachHeading)}
-          </span>
-          {/* `mailto:` não é rota, então não passa pelo `FooterHref`: não leva
-              prefixo de locale e não é um `Link`. */}
-          <a
-            href={`mailto:${email}`}
-            data-cursor="hover"
-            className="inline-block w-fit border-b-[1.5px] border-white/10 pb-1 text-2xl font-semibold tracking-tight text-white transition-colors duration-200 hover:border-white/70 sm:text-2xl"
-          >
-            {email}
-          </a>
-        </div>
-      )}
-      {socialLinks.length > 0 && (
-        <div className="flex flex-col gap-4 sm:items-end">
-          <span className="text-white/70 font-medium text-sm">
-            {textOr(contactBand.socialHeading, fallback.socialHeading)}
-          </span>
-          {/* `flex-wrap` porque três pills com rótulo não cabem numa linha de
-              ~390px, e a alternativa seria rolagem horizontal no footer. */}
-          <ul className="flex flex-row flex-wrap items-center gap-3 sm:justify-end">
-            {socialLinks.map((social) => (
-              <li key={social.key}>
-                <SocialPill social={social} />
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-    </div>
   );
 }
 
@@ -322,139 +191,161 @@ function ContactBand({
 // site, mas seria um segundo import de next-intl aqui — e é justamente o que a
 // nota em `localizedHref` explica que sai caro.
 //
-// A prop `contactBand` traz a faixa **resolvida**: títulos já passados pelo
-// piso, e-mail já buscado. O grupo cru do CMS chama-se `contactBand` e chega
-// aqui dentro de `args`, por nome diferente e sem ser lido — quem chama resolve,
-// o componente só desenha. Os nomes diferem de propósito; ver a nota em
-// `collections/globals/Footer.ts`.
-//
-// `contactBand` é **opcional**, e essa é a escolha de desenho: sem a prop o
-// componente renderiza exatamente o que renderizava antes de a faixa existir.
-// O footer corrente é o caminho normal e a faixa é o acréscimo, não o
-// contrário — assim o slot que serve as outras rotas fica trivial, a fixture
-// existente continua válida, e "footer sem faixa" é o estado que não regride
-// por omissão.
+// `ctaBand` é a única variação por rota (`route-scoped-footer`): `/get-quote`
+// passa `false`, porque a página já é o destino do "Ready to build?". O
+// contacto direto e as redes, que esta rota tinha numa faixa própria, vivem
+// agora no aside da página (`quote-contact-aside`).
 export default function Footer({
   locale,
-  contactBand,
+  ctaBand = true,
   ...args
 }: FooterContent & {
   locale: Locale;
-  contactBand?: FooterContactBand;
+  ctaBand?: boolean;
 }) {
   const cta = args.cta;
   const socialLinks = args.socialLinks;
   const fallback = FALLBACK[locale];
 
-  // A faixa inteira cai quando não tem nenhum dos dois grupos — incluindo o
-  // divider, que sozinho separaria nada de nada.
-  const showBand = Boolean(
-    contactBand && (contactBand.email?.trim() || socialLinks.length > 0),
-  );
-
   return (
-    <footer className="w-full flex flex-col justify-center items-center bg-primary text-white">
-      {showBand && contactBand && (
-        <ContactBand
-          contactBand={contactBand}
-          socialLinks={socialLinks}
-          locale={locale}
-        />
+    <footer
+      data-cursor-tone="light"
+      className="relative flex w-full flex-col items-center overflow-hidden bg-primary text-white"
+    >
+      {/* A grelha mascarada no topo e o halo do canto, do v3. Decoração: ficam
+          por baixo de tudo e não recebem eventos. */}
+      <svg
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 z-0 size-full mask-[radial-gradient(ellipse_70%_60%_at_50%_0%,black,transparent)]"
+      >
+        <defs>
+          <pattern
+            id="footer-grid"
+            width="90"
+            height="30"
+            patternUnits="userSpaceOnUse"
+            x="-1"
+            y="-1"
+          >
+            <path
+              d="M.5 30V.5H90"
+              fill="none"
+              stroke="rgba(255,255,255,0.07)"
+            />
+          </pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#footer-grid)" />
+      </svg>
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -top-60 -right-30 z-0 size-160 rounded-full bg-[radial-gradient(circle,rgba(110,121,126,0.35),rgba(33,37,40,0)_65%)]"
+      />
+
+      {/* A faixa "Ready to build?" abre o footer no v3. */}
+      {ctaBand && (
+        <div
+          className={`relative z-10 container ${FOOTER_GUTTER} border-b border-white/12 pt-22 pb-14`}
+        >
+          <Reveal className="flex flex-col items-start justify-between gap-10 md:flex-row md:flex-wrap md:items-end">
+            <h2 className="gradient-text-inverse max-w-160 font-gilroy text-4xl leading-[1.05] font-bold tracking-[-0.035em] md:text-[44px] lg:text-5xl">
+              {textOr(cta?.heading, fallback.ctaHeading)}
+            </h2>
+            {/* `CalendlyCta` é um leaf de CLIENTE, e é o que permite ao destino
+              do Calendly abrir popup em vez de navegar sem este ficheiro
+              ganhar `"use client"` — os 33,6 KB que o comentário de
+              `localizedHref` acima mediu continuam de fora.
+
+              O prefixo de locale é aplicado AQUI, no servidor: o leaf não
+              importa nada de `@/i18n`, é essa a condição de ele ser barato.
+
+              `localizedCtaHref` devolve `undefined` para `""` e para `#`, e
+              nesse caso o `Button` renderiza `<button>` inerte em vez de uma
+              âncora que salta para o topo. */}
+            <div className="flex w-full flex-wrap gap-3 md:w-auto md:shrink-0">
+              <CalendlyCta
+                className="flex-[1_1_100%] font-semibold md:flex-auto"
+                variant="inverted"
+                size="lg"
+                href={localizedCtaHref(cta?.primaryButton?.href, locale)}
+                trailingIcon={ArrowRightDown}
+                circleIcon
+                textSwap
+              >
+                {textOr(cta?.primaryButton?.label, fallback.primaryLabel)}
+              </CalendlyCta>
+              <CalendlyCta
+                className="flex-[1_1_100%] border-2 px-7.5 md:flex-auto"
+                variant="outline-inverted"
+                size="lg"
+                href={localizedCtaHref(cta?.outlineButton?.href, locale)}
+                textSwap
+              >
+                {textOr(cta?.outlineButton?.label, fallback.outlineLabel)}
+              </CalendlyCta>
+            </div>
+          </Reveal>
+        </div>
       )}
-      <div className={`container py-16 flex flex-col gap-10 ${FOOTER_GUTTER}`}>
-        <div className="flex flex-col gap-2">
+
+      <div
+        className={`relative z-10 container ${FOOTER_GUTTER} flex flex-col gap-12 pt-14 pb-10`}
+      >
+        <div className="flex flex-col gap-2.5">
           <Image
             src={args.logo?.url ?? FALLBACK_LOGO_URL}
             alt={args.logo?.alt ?? fallback.logoAlt}
             width={163}
             height={31}
+            className="h-[31px] w-auto object-contain object-left"
           />
-          <span className="block text-xs font-normal text-white/80">
+          <span className="text-[13px] text-white/70">
             {textOr(args.tagline, fallback.tagline)}
           </span>
         </div>
-        <div className="w-full flex flex-row gap-10">
-          <div className="w-full sm:grid sm:grid-cols-8 gap-6 flex flex-col">
-            {args.linkGroups.map((group) => (
-              <div className="col-span-2 flex flex-col gap-3" key={group.key}>
-                <span className="text-white/70 font-medium text-sm">
-                  {group.title}
-                </span>
-                <ul className="flex flex-col gap-2">
-                  {group.links.map((link) => (
-                    <li key={link.key}>
-                      <FooterHref
-                        href={link.href}
-                        external={link.isExternal}
-                        locale={locale}
-                        data-cursor="hover"
-                        className="inline-flex items-center gap-1 text-sm font-normal text-white"
-                      >
-                        {link.name}
-                        {link.isExternal && (
-                          // Decoração: o nome acessível do link é o rótulo
-                          // authorado, sem sufixo vindo da seta.
-                          <ArrowUpRight
-                            aria-hidden="true"
-                            className="size-3.5 shrink-0"
-                          />
-                        )}
-                      </FooterHref>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-          <div className="flex flex-col gap-4">
-            <span className="text-white font-medium text-lg">
-              {textOr(cta?.heading, fallback.ctaHeading)}
-            </span>
-            <div className="flex flex-col gap-3 w-full xl:min-w-74">
-              {/* Estes dois deixaram de usar `asChild` + `FooterHref`.
-                  `CalendlyCta` é um leaf de CLIENTE, e é o que permite ao
-                  destino do Calendly abrir popup em vez de navegar sem este
-                  ficheiro ganhar `"use client"` — os 33,6 KB que o comentário
-                  de `localizedHref` acima mediu continuam de fora.
-
-                  O prefixo de locale é aplicado AQUI, no servidor: o leaf não
-                  importa nada de `@/i18n`, é essa a condição de ele ser barato.
-
-                  `localizedCtaHref` devolve `undefined` para `""` e para `#`,
-                  e nesse caso o `Button` renderiza `<button>` inerte em vez de
-                  uma âncora que salta para o topo. Hoje é o que acontece ao
-                  botão primário: o `href` authorado é `#`. */}
-              <CalendlyCta
-                className="w-full"
-                variant="inverted"
-                href={localizedCtaHref(cta?.primaryButton?.href, locale)}
-              >
-                {textOr(cta?.primaryButton?.label, fallback.primaryLabel)}
-              </CalendlyCta>
-              <CalendlyCta
-                className="w-full"
-                variant="outline-inverted"
-                href={localizedCtaHref(cta?.outlineButton?.href, locale)}
-              >
-                {textOr(cta?.outlineButton?.label, fallback.outlineLabel)}
-              </CalendlyCta>
+        <div className="grid grid-cols-2 gap-x-6 gap-y-8 md:grid-cols-4">
+          {args.linkGroups.map((group) => (
+            <div className="flex flex-col gap-3.5" key={group.key}>
+              <span className="text-[13px] font-semibold tracking-[0.06em] text-white/56 uppercase">
+                {group.title}
+              </span>
+              <ul className="flex list-none flex-col gap-2.5 p-0 text-[15px] leading-[22px]">
+                {group.links.map((link) => (
+                  <li key={link.key}>
+                    <FooterHref
+                      href={link.href}
+                      external={link.isExternal}
+                      locale={locale}
+                      className="inline-flex items-center gap-1.5 text-white"
+                    >
+                      <RollText>{link.name}</RollText>
+                      {link.isExternal && (
+                        // Decoração: o nome acessível do link é o rótulo
+                        // authorado, sem sufixo vindo da seta.
+                        <span className="roll-arrow" aria-hidden="true">
+                          ↗
+                        </span>
+                      )}
+                    </FooterHref>
+                  </li>
+                ))}
+              </ul>
             </div>
-          </div>
+          ))}
         </div>
       </div>
-      <div className="w-full flex justify-center items-center border-t border-white/20">
+
+      <div className="relative z-10 flex w-full items-center justify-center border-t border-white/12">
         {/* Empilha em telas estreitas: o copyright e três ícones não cabem na
-            mesma linha em ~390px, e o mockup só define o comportamento
-            desktop. */}
+            mesma linha em ~390px. */}
         <div
-          className={`container py-8 ${FOOTER_GUTTER} flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between`}
+          className={`container ${FOOTER_GUTTER} flex flex-col gap-4 py-7 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between`}
         >
-          <span className="text-sm font-normal">
+          <span className="text-sm text-white/70">
             &copy; <CopyrightYear />{" "}
             {textOr(args.copyrightText, fallback.copyright)}
           </span>
           {socialLinks.length > 0 && (
-            <ul className="flex flex-row items-center gap-4">
+            <ul className="flex list-none flex-row items-center gap-2 p-0">
               {socialLinks.map((social) => (
                 <li key={social.key}>
                   <SocialIconLink social={social} />

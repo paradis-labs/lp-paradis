@@ -1,17 +1,24 @@
 import { submitQuoteRequest } from "@/app/(app)/[locale]/(pages)/get-quote/actions";
-import { Reveal } from "@/components/ui/reveal";
+import Reveal from "@/components/Reveal";
 import type { QuotePage } from "@/content";
 import type { Locale } from "@/i18n/routing";
 import { textOr } from "@/lib/cms-text";
 import {
   QUOTE_MESSAGE_FALLBACK,
+  type QuoteFormState,
   type QuoteMessages,
 } from "@/lib/quote-request";
+import { cn } from "@/lib/utils";
+import PageHeader from "../PageHeader";
+import QuoteContactAside, {
+  hasContactAside,
+  type QuoteContactAsideProps,
+} from "./QuoteContactAside";
 import QuoteForm, { type QuoteInterest } from "./QuoteForm";
 
-// O piso de cada texto, por idioma: em `/pt`, um campo vazio no CMS cai em
-// português. As cópias `pt` são as do `block_form` e do formulário
-// `quote_request` no hcms.
+// Os pisos dos campos do CMS (os primeiros) e a cópia de UI que o v3 trouxe sem
+// campo no hcms (a partir de `cardTitle`). Um piso por idioma: em `/pt` um
+// campo vazio cai em português, e nenhuma string em inglês chega à rota.
 const FALLBACK: Record<
   Locale,
   {
@@ -21,10 +28,17 @@ const FALLBACK: Record<
     eyebrow: string;
     nameLabel: string;
     emailLabel: string;
+    companyLabel: string;
     interestsLabel: string;
     messageLabel: string;
     submitLabel: string;
     privacyNote: string;
+    cardTitle: string;
+    cardSubtitle: string;
+    messagePlaceholder: string;
+    optional: string;
+    successNote: string;
+    sendAnother: string;
   }
 > = {
   en: {
@@ -32,41 +46,69 @@ const FALLBACK: Record<
     intro:
       "We're excited to hear what you're building. Drop the details below and we'll reply within one business day.",
     availabilityLabel: "Available for new projects",
-    eyebrow: "THE BRIEF",
+    eyebrow: "Get a Quote",
     nameLabel: "Your name",
     emailLabel: "Your email",
+    companyLabel: "Company",
     interestsLabel: "I'm interested in…",
-    messageLabel: "Tell us about your project",
+    messageLabel: "Your project",
     submitLabel: "Send enquiry",
     privacyNote: "Your details are safe — no ads, no spam.",
+    cardTitle: "Tell us about your project",
+    cardSubtitle: "A few details are enough to get started.",
+    messagePlaceholder:
+      "Goals, timeline, budget range — anything that helps us understand it.",
+    optional: "(optional)",
+    successNote: "We'll reply within one business day.",
+    sendAnother: "Send another",
   },
   pt: {
     headline: "Vamos construir algo que o faça avançar.",
     intro:
       "Queremos saber o que está a construir. Deixe os detalhes abaixo e respondemos dentro de um dia útil.",
     availabilityLabel: "Disponíveis para novos projectos",
-    eyebrow: "O BRIEFING",
+    eyebrow: "Pedir orçamento",
     nameLabel: "O seu nome",
     emailLabel: "O seu e-mail",
+    companyLabel: "Empresa",
     interestsLabel: "Tenho interesse em…",
-    messageLabel: "Fale-nos do seu projecto",
+    messageLabel: "O seu projecto",
     submitLabel: "Enviar pedido",
     privacyNote: "Os seus dados estão seguros — sem anúncios, sem spam.",
+    cardTitle: "Fale-nos do seu projecto",
+    cardSubtitle: "Bastam alguns detalhes para começar.",
+    messagePlaceholder:
+      "Objectivos, prazos, orçamento — tudo o que nos ajude a perceber.",
+    optional: "(opcional)",
+    successNote: "Respondemos dentro de um dia útil.",
+    sendAnother: "Enviar outro",
   },
 };
 
 interface GetQuoteProps extends QuotePage {
   locale: Locale;
+  /** O conteúdo do aside de contacto, já lido pela rota. */
+  aside: Omit<QuoteContactAsideProps, "locale">;
+  /** Só para a fixture: o estado inicial do formulário. */
+  initialFormState?: QuoteFormState;
 }
 
-export default function GetQuote({ locale, ...content }: GetQuoteProps) {
+// A página de orçamento do v3: o `PageHeader`, e por baixo o cartão do
+// formulário com o aside de contacto ao lado (`get-quote-page`,
+// `quote-contact-aside`). Server component: só o formulário é cliente, e
+// recebe apenas strings resolvidas e a lista de chips.
+export default function GetQuote({
+  locale,
+  aside,
+  initialFormState,
+  ...content
+}: GetQuoteProps) {
   const { availability, form } = content;
   const fallback = FALLBACK[locale];
   const messageFallback = QUOTE_MESSAGE_FALLBACK[locale];
 
   const headline = textOr(content.hero.headline, fallback.headline);
   const intro = textOr(content.hero.intro, fallback.intro);
-  const showPill = availability.enabled;
   const availabilityLabel = textOr(
     availability.label,
     fallback.availabilityLabel,
@@ -103,74 +145,78 @@ export default function GetQuote({ locale, ...content }: GetQuoteProps) {
   };
 
   const action = submitQuoteRequest.bind(null, locale);
+  const showAside = hasContactAside(aside);
+
+  // A pill de disponibilidade, controlada pelo CMS. O ponto pulsa (parado com
+  // movimento reduzido); sem localidade, o separador também não aparece.
+  const pill = availability.enabled ? (
+    <p className="inline-flex w-fit items-center gap-2.5 rounded-full border border-border bg-white px-4 py-2 text-sm text-primary">
+      <span aria-hidden="true" className="relative flex size-2">
+        <span className="absolute inset-0 rounded-full bg-green-500 opacity-60 motion-safe:animate-ping" />
+        <span className="relative size-2 rounded-full bg-green-500" />
+      </span>
+      {availabilityLabel}
+      {location ? (
+        <span className="text-mist">
+          {"·"} {location}
+        </span>
+      ) : null}
+    </p>
+  ) : null;
 
   return (
-    <main className="mx-auto w-full max-w-7xl px-6 py-20 sm:px-10 lg:px-20 lg:py-28">
-      {/* Revelação em dois níveis (#20): o cabeçalho com stagger e o formulário
-          como UM bloco. Nunca por campo — o `Reveal` volta a esconder ao sair
-          da viewport, e um Tab para um campo abaixo da dobra daria foco a um
-          elemento a meio da animação. As mensagens de erro vivem dentro do
-          bloco do formulário, que está na viewport quando o visitante submete.
+    <main>
+      <PageHeader
+        eyebrow={textOr(form.eyebrow, fallback.eyebrow)}
+        title={headline}
+        lead={intro}
+        after={pill}
+      />
 
-          O título entra sem atraso e sem deslocamento: é o primeiro ecrã, que o
-          `template.tsx` já faz entrar, e um segundo slide por cima leria como
-          duas animações a competir. */}
-      <Reveal direction="none">
-        <h1 className="max-w-3xl font-gilroy text-4xl font-bold gradient-text leading-[1.08] tracking-tight text-primary whitespace-pre-line sm:text-5xl lg:text-6xl xl:text-7xl">
-          {headline}
-        </h1>
-      </Reveal>
-
-      <Reveal
-        delay={0.08}
-        className="mt-14 flex flex-col gap-10 lg:mt-24 lg:flex-row lg:items-end lg:justify-between"
-      >
-        {showPill ? (
-          <p className="inline-flex w-fit items-center gap-2.5 rounded-full border border-secondary px-5 py-2.5 text-sm text-primary">
-            <span
-              aria-hidden="true"
-              className="size-2 shrink-0 rounded-full bg-green-500"
-            />
-            {availabilityLabel}
-            {location ? (
-              <span className="text-neutral-400">
-                {"·"} {location}
-              </span>
+      {form.enabled || showAside ? (
+        <section className="flex w-full justify-center pt-2 pb-24">
+          <div
+            className={cn(
+              "grid w-full max-w-7xl items-start gap-6 px-3 md:px-4 xl:px-0",
+              form.enabled && showAside && "lg:grid-cols-[minmax(0,1fr)_400px]",
+            )}
+          >
+            {form.enabled ? (
+              <Reveal className="rounded-2xl border bg-white px-5 py-6 md:p-10">
+                <QuoteForm
+                  action={action}
+                  interests={interests}
+                  labels={{
+                    title: fallback.cardTitle,
+                    subtitle: fallback.cardSubtitle,
+                    name: textOr(form.nameLabel, fallback.nameLabel),
+                    email: textOr(form.emailLabel, fallback.emailLabel),
+                    company: form.company
+                      ? textOr(form.company.label, fallback.companyLabel)
+                      : null,
+                    optional: fallback.optional,
+                    interests: textOr(
+                      form.interestsLabel,
+                      fallback.interestsLabel,
+                    ),
+                    message: textOr(form.messageLabel, fallback.messageLabel),
+                    messagePlaceholder: fallback.messagePlaceholder,
+                    submit: textOr(form.submitLabel, fallback.submitLabel),
+                    privacyNote: textOr(form.privacyNote, fallback.privacyNote),
+                    successNote: fallback.successNote,
+                    sendAnother: fallback.sendAnother,
+                  }}
+                  messages={messages}
+                  initialState={initialFormState}
+                />
+              </Reveal>
             ) : null}
-          </p>
-        ) : null}
-
-        <p className="max-w-sm text-lg leading-8 text-primary lg:text-right">
-          {intro}
-        </p>
-      </Reveal>
-
-      {!form.enabled ? null : (
-        <Reveal>
-          <section className="mt-20 lg:mt-28">
-            <h2 className="text-xs font-medium uppercase tracking-[0.2em] text-neutral-400">
-              {textOr(form.eyebrow, fallback.eyebrow)}
-            </h2>
-
-            <QuoteForm
-              action={action}
-              interests={interests}
-              labels={{
-                name: textOr(form.nameLabel, fallback.nameLabel),
-                email: textOr(form.emailLabel, fallback.emailLabel),
-                interests: textOr(
-                  form?.interestsLabel,
-                  fallback.interestsLabel,
-                ),
-                message: textOr(form.messageLabel, fallback.messageLabel),
-                submit: textOr(form.submitLabel, fallback.submitLabel),
-                privacyNote: textOr(form.privacyNote, fallback.privacyNote),
-              }}
-              messages={messages}
-            />
-          </section>
-        </Reveal>
-      )}
+            {showAside ? (
+              <QuoteContactAside locale={locale} {...aside} />
+            ) : null}
+          </div>
+        </section>
+      ) : null}
     </main>
   );
 }

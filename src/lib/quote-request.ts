@@ -13,6 +13,7 @@ export const QUOTE_LIMITS = {
   name: 120,
   email: 200,
   message: 4000,
+  company: 160,
   interests: 12,
 } as const;
 
@@ -57,6 +58,9 @@ export const quoteSubmissionSchema = z.object({
     .trim()
     .min(1, "messageRequired")
     .max(QUOTE_LIMITS.message, "tooLong"),
+  // Opcional. Vazio depois do trim conta como ausente — a action passa `null`
+  // ao provider, que só o grava se o formulário do hcms declarar o campo.
+  company: z.string().trim().max(QUOTE_LIMITS.company, "tooLong").optional(),
   // Slugs de serviço, não ids: o slug é a identidade estável de um interesse
   // (um `title` reescrito no CMS não pode invalidar submissões antigas). A
   // action resolve-os contra a coleção e descarta o que não existir.

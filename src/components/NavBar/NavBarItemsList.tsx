@@ -1,22 +1,14 @@
 import type React from "react";
-import { twJoin } from "tailwind-merge";
 
-interface NavBarItemsListProps {
-  children: React.ReactNode;
-  className?: string;
-}
-
+// Os links da barra, ao centro. Só a partir de `lg`: abaixo disso vivem no menu
+// mobile, numerados.
 export default function NavBarItemsList({
   children,
-  className,
-}: NavBarItemsListProps) {
+}: {
+  children: React.ReactNode;
+}) {
   return (
-    <ul
-      className={twJoin(
-        "w-full flex flex-col lg:flex-row justify-center gap-6 lg:gap-2",
-        className,
-      )}
-    >
+    <ul className="hidden h-10 list-none items-center gap-1 p-0 lg:flex">
       {children}
     </ul>
   );

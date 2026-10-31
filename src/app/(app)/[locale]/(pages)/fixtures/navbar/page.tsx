@@ -51,6 +51,20 @@ const BASE: NavBar = {
       openInNewTab: false,
     },
   ],
+  socialLinks: [
+    {
+      key: "s1",
+      platform: "linkedin",
+      url: "https://www.linkedin.com/company/paradis-labs",
+      label: "Paradis on LinkedIn",
+    },
+    {
+      key: "s2",
+      platform: "instagram",
+      url: "https://www.instagram.com/paradis.labs_/",
+      label: "Paradis on Instagram",
+    },
+  ],
 };
 
 const CASES: Array<{
@@ -124,7 +138,7 @@ const CASES: Array<{
     scenario: "Sem botões authorados",
     prop: "buttons: []",
     expected:
-      "o switch de idioma continua a aparecer sozinho no ButtonWrap — ele não depende do CMS",
+      "o switch de idioma continua a aparecer sozinho à direita da barra — ele não depende do CMS",
     args: { ...BASE, buttons: [] },
   },
   {
@@ -133,6 +147,13 @@ const CASES: Array<{
     expected:
       "renderiza sem lançar erro, com logo e switch apenas, e o layout da barra permanece íntegro",
     args: { ...BASE, links: [], buttons: [] },
+  },
+  {
+    scenario: "Menu mobile sem redes",
+    prop: "socialLinks: []",
+    expected:
+      "abaixo de 768px, com o menu aberto: a barra inferior mostra só o switch de idioma, sem fila de ícones vazia",
+    args: { ...BASE, socialLinks: [] },
   },
   {
     scenario: "Âncora e query na raiz — sem barra antes do # ou do ?",
@@ -211,15 +232,18 @@ export default async function NavbarFixturePage({
           abaixo.
         </p>
         <p className="mt-2 max-w-3xl text-sm font-semibold text-neutral-900">
-          Contagem esperada: 7 navbars fabricados + 1 navbar real herdado do
-          layout, no topo da página. Total 8 — e{" "}
-          <strong>8 pílulas de idioma em repouso</strong>. O{" "}
-          <code className="font-mono">NavBarMobileMenu</code> põe os children em
-          dois lugares, mas o portal mobile só é montado{" "}
-          <em>enquanto o menu está aberto</em> (
-          <code className="font-mono">isOpen &amp;&amp; createPortal</code>),
-          pelo que a segunda cópia aparece só nesse intervalo — e é por isso que
-          o switch não pode ter <code className="font-mono">id</code> fixo.
+          Contagem esperada: 8 navbars fabricados + 1 navbar real herdado do
+          layout, no topo da página. Total 9 — e, a partir de 768px,{" "}
+          <strong>9 pílulas de idioma em repouso</strong>. Abaixo de 768px a
+          pílula sai da barra e só existe dentro do menu aberto.
+        </p>
+        <p className="mt-2 max-w-3xl text-sm text-neutral-700">
+          Menu mobile: abrir um caso a 390px (CTAs, switch e redes dentro do
+          painel) e a 900px (só os links; CTA e switch ficam na barra). Com o
+          menu aberto: Tab circula dentro da barra e do painel, Escape fecha e
+          devolve o foco ao botão. Abrir um menu de cada vez — o painel tem{" "}
+          <code className="font-mono">id</code> fixo para o{" "}
+          <code className="font-mono">aria-controls</code>.
         </p>
         <p className="mt-1 max-w-3xl text-xs text-neutral-600">
           Abra esta rota em <code className="font-mono">/en</code> e em{" "}

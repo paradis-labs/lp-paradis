@@ -56,6 +56,27 @@ export async function getHomepage(locale: Locale) {
   return provider.getHomepage(locale);
 }
 
+export async function getProductsPage(locale: Locale) {
+  "use cache";
+  tag("products-page", locale);
+  return provider.getProductsPage(locale);
+}
+
+export async function getProduct(locale: Locale, slug: string) {
+  "use cache";
+  tag("product", locale);
+  return provider.getProduct(locale, slug);
+}
+
+// Os slugs para o `generateStaticParams` de `/products/[slug]`. São os mesmos
+// nos dois idiomas (o de `en-US`), por isso basta uma leitura.
+export async function getProductSlugs() {
+  const page = await getProductsPage("en");
+  return page.items
+    .map((item) => item.slug)
+    .filter((slug): slug is string => Boolean(slug));
+}
+
 export async function getQuotePage(locale: Locale) {
   "use cache";
   tag("quote-page", locale);

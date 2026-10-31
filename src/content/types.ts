@@ -68,6 +68,11 @@ export type NavBar = {
   } | null;
   links: NavLink[];
   buttons: NavButton[];
+  /**
+   * As redes do site, as mesmas do footer e pela mesma ordem. O menu mobile do
+   * v3 mostra-as na barra inferior.
+   */
+  socialLinks: FooterSocialLink[];
 };
 
 // ── Footer ─────────────────────────────────────────────────────────────────
@@ -128,26 +133,6 @@ export type Footer = {
   socialLinks: FooterSocialLink[];
 };
 
-// A prop da faixa de contacto direto do footer: a junção das suas duas fontes.
-// Os títulos vêm do grupo `directContact` do footer, que é cópia traduzível; o
-// e-mail vem do contacto da empresa, que é um facto com dono próprio e não se
-// traduz.
-//
-// O nome difere do grupo do CMS de propósito — `contactBand` aqui,
-// `directContact` lá. São formas diferentes com o mesmo conteúdo nominal, e com
-// o mesmo nome a interseção `Footer & { ... }` no componente exigiria as duas
-// ao mesmo tempo, o que nenhum valor satisfaz.
-//
-// Os títulos entram crus, tal como todos os outros textos do footer: o piso é
-// aplicado dentro do componente, que já é onde vivem os pisos da tagline, do
-// heading do CTA e dos rótulos dos botões.
-export type FooterContactBand = {
-  reachHeading?: string | null;
-  socialHeading?: string | null;
-  /** Ausente quando não há contacto com e-mail. */
-  email?: string | null;
-};
-
 // ── Contacto da empresa ────────────────────────────────────────────────────
 
 export type Contact = {
@@ -181,6 +166,14 @@ export type Project = {
   url: string;
   /** O rótulo do link do card. Vazio, a UI usa o seu piso ("Discover More"). */
   linkLabel: string | null;
+  /**
+   * O slug da página de detalhe (`/products/<slug>`), o de `en-US` nos dois
+   * idiomas. `null` num projecto sem slug: o cartão abre então o site externo.
+   */
+  slug: string | null;
+  /** O nome da categoria no locale pedido ("Fintech · Prepaid cards"). */
+  category: string | null;
+  tags: string[];
 };
 
 export type TestimonialSocial =
@@ -235,6 +228,61 @@ export type Homepage = {
   faqs: Section<Faq>;
 };
 
+// ── Página de produtos ─────────────────────────────────────────────────────
+
+/**
+ * A listagem `/products`. O cabeçalho é o do bloco `#products` da home — o
+ * mesmo texto que a secção mostra —, por isso não há página própria no CMS.
+ */
+export type ProductsPage = {
+  eyebrow: string | null;
+  title: string | null;
+  lead: string | null;
+  items: Project[];
+};
+
+// ── Detalhe de produto ─────────────────────────────────────────────────────
+
+/** Os ícones dos cartões de características: o `select` `steps[].icon` do hcms. */
+export const PRODUCT_ICONS = [
+  "swap",
+  "trend",
+  "shield",
+  "calculator",
+  "globe",
+  "clock",
+] as const;
+
+export type ProductIcon = (typeof PRODUCT_ICONS)[number];
+
+export type ProductStep = {
+  /** `null` sem ícone, ou com um valor fora de `PRODUCT_ICONS`. */
+  icon: ProductIcon | null;
+  title: string;
+  body: string | null;
+};
+
+/**
+ * O projecto com os campos da página `/products/<slug>`. Todos opcionais: um
+ * projecto sem eles é uma página com cabeçalho, capa e ficha.
+ */
+export type ProductDetail = Project & {
+  market: string | null;
+  platform: string | null;
+  challenge: string | null;
+  solution: string | null;
+  steps: ProductStep[];
+  gallery: Media[];
+  /** `null` sem testemunho ligado, ou com ele em rascunho. */
+  testimonial: Testimonial | null;
+};
+
+export type ProductPage = {
+  product: ProductDetail;
+  /** Os outros projectos do site, para "More Products". */
+  others: Project[];
+};
+
 // ── Página de orçamento ────────────────────────────────────────────────────
 
 export type QuotePage = {
@@ -254,6 +302,12 @@ export type QuotePage = {
     emailLabel: string | null;
     interestsLabel: string | null;
     interests: Service[];
+    /**
+     * O campo de empresa, opcional. `null` quando o formulário do hcms não
+     * declara um campo `company`: a página não o mostra, e a escrita não o
+     * envia.
+     */
+    company: { label: string | null } | null;
     messageLabel: string | null;
     submitLabel: string | null;
     privacyNote: string | null;
@@ -275,6 +329,11 @@ export type QuoteRequestInput = {
   name: string;
   email: string;
   message: string;
+  /**
+   * A empresa, aparada. `null` quando vazia. Só chega ao hcms se o formulário
+   * declarar o campo — quem decide é o provider, na escrita.
+   */
+  company: string | null;
   /** Os serviços escolhidos, já resolvidos por `findServicesBySlugs`. */
   services: Service[];
   submittedLocale: string;

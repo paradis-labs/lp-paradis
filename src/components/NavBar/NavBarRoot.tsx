@@ -1,7 +1,4 @@
-"use client";
-
 import type React from "react";
-import { useEffect, useState } from "react";
 import { twJoin } from "tailwind-merge";
 
 interface NavBarRootProps {
@@ -9,43 +6,29 @@ interface NavBarRootProps {
   className?: string;
 }
 
+// A barra do v3: sticky e em glass em todas as posições de scroll.
+//
+// O glass era só do estado `scrolled`, com um listener de scroll a decidir, e
+// a nota dizia porquê: no topo o fundo era opaco e o `backdrop-filter` não se
+// via mas continuava a ser recalculado. No v3 o fundo é translúcido sempre
+// (`white/55`), o blur vê-se sempre, e o listener deixa de ter razão de ser.
+//
+// 20px e não os 40px de antes (P2 da Motion spec do canvas). Se o orçamento de
+// `scroll-frame-budget` falhar em mobile, o recurso é descer para 12px.
+//
+// A grelha tem três colunas a partir de `lg` (logo · links · ações), e por
+// baixo encolhe com o que se vê: logo · ações · menu entre `md` e `lg`, logo ·
+// menu abaixo de `md`. Os filhos escondidos em cada breakpoint não ocupam
+// coluna, porque `hidden` os tira do fluxo da grelha.
 export default function NavBarRoot({ children, className }: NavBarRootProps) {
-  const [scrolled, setScrolled] = useState(false);
-
-  useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 8);
-
-    handleScroll();
-    window.addEventListener("scroll", handleScroll, { passive: true });
-
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
   return (
     <nav
-      className={twJoin(
-        "sticky top-0 z-40 w-full flex items-center justify-center py-7 border-b transition-[background-color,box-shadow,border-color] duration-300 ease-out",
-        // O `backdrop-blur` vive no estado `scrolled`, não na base.
-        //
-        // No topo da página o fundo é `bg-background` — e `--background` é
-        // opaco nos dois temas (`#ffffff` / `#151718`). Um `backdrop-filter`
-        // atrás de uma superfície opaca não produz efeito visível nenhum, mas
-        // continua sendo reprocessado a cada frame em que o conteúdo por trás
-        // se move. Com o Lenis conduzindo o scroll por rAF, "a cada frame em
-        // que o conteúdo se move" é todo frame de todo scroll.
-        //
-        // Mover o blur para cá é ganho sem contrapartida: ele passa a existir
-        // exatamente onde o fundo é translúcido e o efeito aparece. Não há
-        // pop na transição — o blur entra no mesmo instante em que o fundo
-        // começa a deixar passar o que está atrás.
-        scrolled
-          ? "bg-background/50 shadow-xs border-border/90 backdrop-blur-2xl"
-          : "bg-background border-transparent",
-      )}
+      aria-label="Main"
+      className="sticky top-0 z-40 flex w-full justify-center bg-white/55 py-6 backdrop-blur-[20px] backdrop-saturate-[1.6]"
     >
       <div
         className={twJoin(
-          "container lg:mx-auto px-4 xl:px-0 flex items-center",
+          "grid w-full max-w-7xl grid-cols-[minmax(0,1fr)_auto] items-center gap-4 px-4 md:grid-cols-[minmax(0,1fr)_auto_auto] lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]",
           className,
         )}
       >

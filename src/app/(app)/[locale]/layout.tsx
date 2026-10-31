@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "../globals.css";
-import CursorFollower from "@/components/CursorFollower";
+import CursorLoader from "@/components/Cursor";
 import Header from "@/components/Header";
 import HydrationSignal from "@/components/HydrationSignal";
 import NavigationProgress from "@/components/NavigationProgress";
@@ -44,7 +44,7 @@ export default async function RootLayout({
     <html lang={locale} data-scroll-behavior="smooth" suppressHydrationWarning>
       <body className={`antialiased ${inter.className} ${gilroy.variable}`}>
         <HydrationSignal />
-        <CursorFollower />
+        <CursorLoader />
         <NavigationProgress />
         <SmoothScroll>
           <Header {...headerData} locale={locale} />

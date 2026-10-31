@@ -7,6 +7,7 @@ import { Suspense } from "react";
 import type { Locale } from "@/i18n/routing";
 import { currentLocale, otherLocale, swapLocale } from "@/lib/locale-href";
 import Button from "../Button";
+import RollText from "../RollText";
 
 const LOCALE_META: Record<Locale, { code: string; flag: string }> = {
   en: { code: "EN", flag: "/flag-en.svg" },
@@ -24,7 +25,7 @@ function PillContent({ locale }: { locale: Locale }) {
   const meta = LOCALE_META[locale];
 
   return (
-    <span className="inline-flex items-center gap-2.5">
+    <span className="inline-flex items-center gap-2">
       <Image
         src={meta.flag}
         alt=""
@@ -33,7 +34,7 @@ function PillContent({ locale }: { locale: Locale }) {
         height={23}
         className="size-5 shrink-0 rounded-full object-cover"
       />
-      <span className="text-sm font-medium pr-1">{meta.code}</span>
+      <RollText className="text-sm font-medium">{meta.code}</RollText>
     </span>
   );
 }

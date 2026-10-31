@@ -46,6 +46,7 @@ export async function submitQuoteRequest(
     name: formData.get("name") ?? "",
     email: formData.get("email") ?? "",
     message: formData.get("message") ?? "",
+    company: formData.get("company") ?? undefined,
     interests: formData.getAll("interests").map(String),
     honeypot: "",
   });
@@ -57,7 +58,7 @@ export async function submitQuoteRequest(
     };
   }
 
-  const { name, email, message, interests } = parsed.data;
+  const { name, email, message, company, interests } = parsed.data;
 
   try {
     // Um slug forjado não corresponde a nenhum serviço e fica de fora; os
@@ -71,6 +72,7 @@ export async function submitQuoteRequest(
       name,
       email,
       message,
+      company: company || null,
       services,
       // Determinado no servidor. Um locale fora da lista suportada cai no
       // padrão em vez de rebentar a gravação por causa de metadados.

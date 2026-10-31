@@ -18,7 +18,13 @@
 import type { Locale } from "@/i18n/routing";
 
 /** As leituras cacheadas do módulo. Uma por função `get*` de `@/content`. */
-export type ContentRead = "navbar" | "footer" | "homepage" | "quote-page";
+export type ContentRead =
+  | "navbar"
+  | "footer"
+  | "homepage"
+  | "products-page"
+  | "product"
+  | "quote-page";
 
 /** As coleções que alguma leitura popula. */
 export type ContentCollection =
@@ -43,6 +49,9 @@ export const READ_COLLECTIONS: Record<ContentRead, ContentCollection[]> = {
   navbar: ["media"],
   footer: ["media"],
   homepage: ["hero", "services", "projects", "testimonials", "faqs", "media"],
+  // O cabeçalho vem de uma página (`PAGE_READS`), os cartões dos projectos.
+  "products-page": ["projects", "media"],
+  product: ["projects", "testimonials", "media"],
   "quote-page": ["services"],
 };
 
@@ -50,11 +59,13 @@ export const READ_COLLECTIONS: Record<ContentRead, ContentCollection[]> = {
 //
 // O Flow do hcms chama `POST /api/cms/revalidate` com a coleção alterada, e
 // este mapa traduz-a para as tags acima. Com o hcms, uma página (`pages`,
-// `page_blocks`, `block_*`) alimenta a homepage, a página de orçamento e a
-// faixa de contacto do footer (o `block_contact`), por isso invalida as três.
+// `page_blocks`, `block_*`) alimenta a homepage, a listagem de produtos (o
+// bloco `#products` da home), a página de orçamento e a faixa de contacto do
+// footer (o `block_contact`), por isso invalida as quatro.
 
 const PAGE_READS = [
   readTag("homepage"),
+  readTag("products-page"),
   readTag("quote-page"),
   readTag("footer"),
 ];
@@ -68,6 +79,9 @@ const HCMS_COLLECTION_TAGS: Record<string, string[]> = {
   page_blocks: PAGE_READS,
   offerings: [collectionTag("services")],
   projects: [collectionTag("projects")],
+  // Só os projectos usam categorias e a galeria neste site.
+  categories: [collectionTag("projects")],
+  projects_files: [collectionTag("projects")],
   testimonials: [collectionTag("testimonials")],
   faqs: [collectionTag("faqs")],
   forms: [readTag("quote-page")],

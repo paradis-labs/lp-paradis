@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import type React from "react";
 import Footer from "@/components/Footer";
-import type { FooterContactBand, Footer as FooterContent } from "@/content";
+import type { Footer as FooterContent } from "@/content";
 import type { Locale } from "@/i18n/routing";
 
 // O global inteiro vazio, na forma de domínio: textos a `null`, listas vazias.
@@ -60,33 +60,12 @@ const BASE: FooterContent = {
   ],
 };
 
-const THREE_SOCIALS: FooterContent["socialLinks"] = [
-  {
-    key: "s2",
-    platform: "instagram",
-    url: "https://www.instagram.com/paradis.labs",
-    label: "Paradis Labs on Instagram",
-  },
-  {
-    key: "s3",
-    platform: "linkedin",
-    url: "https://www.linkedin.com/company/paradis-labs",
-    label: "Paradis Labs on LinkedIn",
-  },
-  {
-    key: "s4",
-    platform: "dribbble",
-    url: "https://dribbble.com/paradislabs",
-    label: "Paradis Labs on Dribbble",
-  },
-];
-
 const CASES: Array<{
   scenario: string;
   prop: string;
   expected: string;
   args: FooterContent;
-  contactBand?: FooterContactBand;
+  ctaBand?: boolean;
 }> = [
   {
     scenario: "Copyright sem texto authorado",
@@ -137,87 +116,12 @@ const CASES: Array<{
     },
   },
   {
-    scenario: "FAIXA — conteúdo completo",
-    prop: "contactBand: { headings, email } + 3 redes",
+    scenario: "Composição de /get-quote — sem faixa CTA",
+    prop: "ctaBand: false",
     expected:
-      "a faixa abre o footer com o título e o e-mail à esquerda, o título e três pills rotuladas à direita, e um divider a separá-la do logo",
-    args: { ...BASE, socialLinks: THREE_SOCIALS },
-    contactBand: {
-      reachHeading: "Reach Us Directly",
-      socialHeading: "Elsewhere",
-      email: "geral@paradis.host",
-    },
-  },
-  {
-    scenario: "FAIXA — coleção Contact vazia",
-    prop: "contactBand.email: undefined",
-    expected:
-      "o grupo de contacto some INTEIRO, incluindo o seu título — um título sozinho seria pior que a ausência; as pills continuam, e o divider fica",
-    args: { ...BASE, socialLinks: THREE_SOCIALS },
-    contactBand: {
-      reachHeading: "Reach Us Directly",
-      socialHeading: "Elsewhere",
-      email: undefined,
-    },
-  },
-  {
-    scenario: "FAIXA — nenhuma rede authorada",
-    prop: "socialLinks: [] com e-mail presente",
-    expected:
-      "o grupo de redes some inteiro, incluindo o título `Elsewhere`; o e-mail continua e o divider fica. A barra inferior também perde os ícones, pela mesma ausência",
-    args: { ...BASE, socialLinks: [] },
-    contactBand: {
-      reachHeading: "Reach Us Directly",
-      socialHeading: "Elsewhere",
-      email: "geral@paradis.host",
-    },
-  },
-  {
-    scenario: "FAIXA — sem e-mail e sem redes",
-    prop: "socialLinks: [] + email: undefined",
-    expected:
-      "a faixa NÃO renderiza, e o divider tem de sumir com ela — um divider sozinho separaria nada de nada. O footer fica indistinguível do das outras rotas",
-    args: { ...BASE, socialLinks: [] },
-    contactBand: {
-      reachHeading: "Reach Us Directly",
-      socialHeading: "Elsewhere",
-      email: undefined,
-    },
-  },
-  {
-    scenario: "FAIXA — títulos esvaziados no admin",
-    prop: 'reachHeading: "", socialHeading: "   "',
-    expected:
-      "os dois títulos caem no piso em código e nenhum fica em branco — string vazia e só-espaços contam como ausente",
-    args: { ...BASE, socialLinks: THREE_SOCIALS },
-    contactBand: {
-      reachHeading: "",
-      socialHeading: "   ",
-      email: "geral@paradis.host",
-    },
-  },
-  {
-    scenario: "FAIXA — plataforma sem nome derivável",
-    prop: 'socialLinks: [{ platform: "other", … }]',
-    expected:
-      "a pill continua a renderizar e a ser clicável, com o `label` como texto visível — omiti-la seria o pior modo de falha; as outras pills mostram o nome de marca normalmente",
-    args: {
-      ...BASE,
-      socialLinks: [
-        ...THREE_SOCIALS,
-        {
-          key: "s6",
-          platform: "other",
-          url: "https://paradis.host",
-          label: "Paradis Labs elsewhere",
-        },
-      ],
-    },
-    contactBand: {
-      reachHeading: "Reach Us Directly",
-      socialHeading: "Elsewhere",
-      email: "geral@paradis.host",
-    },
+      'o footer abre directamente no logo com a tagline; não há "Ready to build?" nem os dois botões, porque a página de orçamento já é o destino deles. O resto do footer não muda',
+    args: BASE,
+    ctaBand: false,
   },
 ];
 
@@ -272,13 +176,13 @@ export default async function FooterFixturePage({
           abaixo, e nada é escrito no banco.
         </p>
         <p className="mt-2 max-w-3xl text-sm font-semibold text-neutral-900">
-          Contagem esperada: 11 footers fabricados + 1 footer real, no fim da
-          página. Total 12. Os casos 1–5 exercitam a composição corrente, sem
-          faixa; os casos 6–11 exercitam a faixa de contacto direto, que na
-          aplicação só existe em <code className="font-mono">/get-quote</code>.
-          O footer real desta página vem do slot{" "}
-          <code className="font-mono">@footer/default.tsx</code>, e portanto não
-          tem faixa — é isso que se espera dele.
+          Contagem esperada: 6 footers fabricados + 1 footer real, no fim da
+          página. Total 7. Os casos 1–5 exercitam a composição de base, com a
+          faixa &ldquo;Ready to build?&rdquo;; o caso 6 é a composição de{" "}
+          <code className="font-mono">/get-quote</code>, sem ela. A faixa de
+          contacto direto deixou de existir: o contacto da página de orçamento
+          vive no aside, exercitado em{" "}
+          <code className="font-mono">/fixtures/get-quote</code>.
         </p>
         <p className="mt-1 max-w-3xl text-xs text-neutral-600">
           Cenários de origem:{" "}
@@ -301,14 +205,14 @@ export default async function FooterFixturePage({
           prop={c.prop}
           expected={c.expected}
         >
-          <Footer {...c.args} locale={locale} contactBand={c.contactBand} />
+          <Footer {...c.args} locale={locale} ctaBand={c.ctaBand} />
         </Case>
       ))}
 
       <section className="border-t-4 border-dashed border-neutral-400">
         <header className="bg-amber-100 px-4 py-3 text-neutral-900">
           <p className="text-sm font-semibold">
-            12. CONTROLE — footer real da aplicação
+            7. CONTROLE — footer real da aplicação
           </p>
           <p className="mt-1 text-xs text-neutral-700">
             O próximo footer abaixo NÃO é fabricado. Vem do slot{" "}
@@ -316,8 +220,8 @@ export default async function FooterFixturePage({
             reais do CMS, como em qualquer página do site que não seja{" "}
             <code className="font-mono">/get-quote</code>. Está aqui como
             controle: &ldquo;conteúdo real e completo&rdquo;, para comparar com
-            os onze acima. Não é um décimo segundo estado. Ele não tem faixa, e
-            é essa a composição correta para esta rota.
+            os seis acima. Não é um sétimo estado. Tem a faixa CTA, e é essa a
+            composição correta para esta rota.
           </p>
         </header>
       </section>

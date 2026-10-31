@@ -57,12 +57,10 @@ export default async function CalendlyFixturePage() {
           variant="outline"
           href="https://calendly.com/geral-paradis/30min"
           trailingIcon={ArrowRightDown}
-          iconProps={{ size: 20 }}
           circleIcon
-          magnetic
           textSwap
         >
-          <span>como no Hero (magnetic + circleIcon)</span>
+          <span>como no About (circleIcon)</span>
         </CalendlyCta>
       </Case>
 
