@@ -1,4 +1,4 @@
-import { ArrowRightDown } from "@solar-icons/react";
+import { ArrowDownRight } from "@/components/Glyphs";
 import type { Hero as Herotype } from "@/content";
 import CalendlyCta from "../CalendlyCta";
 import { GridPattern } from "../ui/grid-pattern";
@@ -64,7 +64,7 @@ export default function Hero(args: HeroProps) {
                 className="flex-[1_1_100%] md:flex-auto"
                 variant="primary"
                 href={args.primaryCtaHref}
-                trailingIcon={ArrowRightDown}
+                trailingIcon={ArrowDownRight}
                 circleIcon
                 textSwap
               >

@@ -20,19 +20,24 @@ export function useNavActive() {
 //
 //   • um link de secção (`/#services`) é corrente quando a secção está a meio
 //     da viewport;
-//   • um link de página (`/products`, `/`) é corrente quando o pathname é
-//     exactamente o seu destino — e nenhuma secção está activa. Sem a segunda
-//     condição, na home "Home" e "Services" ficavam correntes ao mesmo tempo.
+//   • um link de página (`/products`, `/`) é corrente quando o pathname é o
+//     seu destino ou desce dele por segmento (`/en/products/kitenda` marca
+//     "Products") — e nenhuma secção está activa. Sem a segunda condição, na
+//     home "Home" e "Services" ficavam correntes ao mesmo tempo.
 //
-// Correspondência exacta e não por prefixo: com prefixo, `/en` (Home) seria
-// corrente em todas as páginas.
+// A raiz do locale (`/en`) fica de fora da descida: todas as páginas descem
+// dela, e "Home" seria corrente em todas. A barra no fim do prefixo impede que
+// `/en/products-archive` marque `/en/products`.
 export function isNavLinkActive(
   link: { href: string; hash?: string },
   activeHash: string | null,
   pathname: string,
 ) {
   if (link.hash) return link.hash === activeHash;
-  return !activeHash && link.href === pathname;
+  if (activeHash) return false;
+  if (link.href === pathname) return true;
+  const isLocaleRoot = link.href.split("/").filter(Boolean).length <= 1;
+  return !isLocaleRoot && pathname.startsWith(`${link.href}/`);
 }
 
 export function useIsNavLinkActive(href: string, hash?: string) {

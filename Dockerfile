@@ -80,10 +80,11 @@ ENV NODE_ENV=production
 # projeto) e era descartado a cada build.
 #
 # O motivo documentado para não cacheá-lo era preservar .next/cache/fetch-cache
-# na imagem final. Esse trade-off não existe aqui: nenhuma rota da aplicação é
-# pré-renderizada — `prerender-manifest.json` traz apenas _not-found,
-# _global-error e favicon.ico —, então nenhuma resposta de fetch é capturada em
-# build. Estávamos pagando o custo sem receber a contrapartida.
+# na imagem final. Esse trade-off não existe aqui: as páginas públicas são
+# pré-renderizadas (com `cacheComponents`), mas o conteúdo vem de `"use cache"`
+# e não de `fetch` com cache, e o HTML pré-renderizado vai em
+# .next/server/app, dentro do standalone, não em .next/cache. Nada do que o
+# runtime precisa vive no cache mount.
 RUN --mount=type=cache,target=/app/.next/cache,sharing=locked \
   pnpm build
 

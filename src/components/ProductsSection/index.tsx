@@ -1,13 +1,14 @@
-import { ArrowRight } from "@solar-icons/react";
+import { ArrowRight } from "@/components/Glyphs";
 import Reveal from "@/components/Reveal";
 import type { Homepage } from "@/content";
 import type { Locale } from "@/i18n/routing";
+import { localizedHref } from "@/lib/locale-href";
 import CalendlyCta from "../CalendlyCta";
 import Card from "../Card";
 import SectionHeading from "../SectionHeading";
 
-// Só para leitores de ecrã: o link de cada projecto abre noutra aba, e quem não
-// vê o ícone tem de o ouvir antes de clicar.
+// Só para leitores de ecrã: o link de um projecto sem slug abre o site noutra
+// aba, e quem não vê o ícone tem de o ouvir antes de clicar.
 const NEW_TAB_HINT: Record<Locale, string> = {
   en: "(opens in a new tab)",
   pt: "(abre num novo separador)",
@@ -96,7 +97,12 @@ export default function ProductsSection({
               }
               anchor={{
                 label: project.linkLabel ?? LINK_LABEL[locale],
-                href: project.url,
+                // O detalhe quando há slug, como o cartão da listagem; o site
+                // ao vivo visita-se a partir dele.
+                href: project.slug
+                  ? localizedHref(`/products/${project.slug}`, locale)
+                  : project.url,
+                external: !project.slug,
                 newTabHint: NEW_TAB_HINT[locale],
               }}
               cursorText={CURSOR_TEXT[locale]}

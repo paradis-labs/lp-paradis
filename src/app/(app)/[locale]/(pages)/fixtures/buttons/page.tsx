@@ -1,7 +1,7 @@
-import { ArrowRight, ArrowRightDown } from "@solar-icons/react";
 import { notFound } from "next/navigation";
 import type React from "react";
 import Button from "@/components/Button";
+import { ArrowDownRight, ArrowRight } from "@/components/Glyphs";
 
 const VARIANTS = [
   "primary",
@@ -53,7 +53,7 @@ function Matrix({ surface }: { surface: "light" | "dark" }) {
           <Button
             key={variant}
             variant={variant}
-            trailingIcon={ArrowRightDown}
+            trailingIcon={ArrowDownRight}
             circleIcon
             textSwap
           >
@@ -82,7 +82,7 @@ function Matrix({ surface }: { surface: "light" | "dark" }) {
             key={size}
             variant="primary"
             size={size}
-            trailingIcon={ArrowRightDown}
+            trailingIcon={ArrowDownRight}
             circleIcon
             textSwap
           >
@@ -94,7 +94,7 @@ function Matrix({ surface }: { surface: "light" | "dark" }) {
       <Row title="as combinações reais da home">
         <Button
           variant="outline"
-          trailingIcon={ArrowRightDown}
+          trailingIcon={ArrowDownRight}
           circleIcon
           textSwap
         >
@@ -123,7 +123,7 @@ function Matrix({ surface }: { surface: "light" | "dark" }) {
         <Button
           variant="primary"
           href="/en/get-quote"
-          trailingIcon={ArrowRightDown}
+          trailingIcon={ArrowDownRight}
           circleIcon
           textSwap
         >

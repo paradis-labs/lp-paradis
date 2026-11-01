@@ -16,6 +16,11 @@ import { hcmsCollectionTags } from "@/content/cache-tags";
 // 401 sem o segredo certo (ou sem segredo configurado); 400 com corpo inválido
 // ou de outro site; 200 com as tags invalidadas.
 //
+// **Cada desfecho deixa uma linha `[cache]` no log**, os 401 com o motivo
+// (segredo em falta no site ou errado). Sem isto a revalidação falhava em
+// silêncio: só o registo do flow no hcms mostrava o 401. O que cada linha quer
+// dizer está em `cms/hcms/FLOW.md`.
+//
 // **Uma coleção que o site não usa dá 200 sem invalidar nada**, e não um erro:
 // o flow notifica todos os sites de todas as alterações de conteúdo do hcms
 // (outras coleções, outros sites), e um 400 apareceria como falha no registo do
@@ -44,17 +49,32 @@ function sameSecret(received: string, expected: string): boolean {
 export async function POST(request: Request) {
   const expected = process.env.CMS_REVALIDATE_SECRET?.trim();
   const received = request.headers.get("x-revalidate-secret") ?? "";
-  if (!expected || !sameSecret(received, expected)) {
+  // Os dois motivos dão a mesma resposta, mas não o mesmo log: dizer ao
+  // cliente que o site não tem segredo anunciaria o erro de configuração a
+  // quem quer que chame o endpoint. Nenhum valor de segredo entra no log.
+  if (!expected) {
+    console.warn(
+      "[cache] revalidação recusada: o site não tem CMS_REVALIDATE_SECRET",
+    );
+    return Response.json({ error: "unauthorized" }, { status: 401 });
+  }
+  if (!sameSecret(received, expected)) {
+    console.warn("[cache] revalidação recusada: segredo recebido errado");
     return Response.json({ error: "unauthorized" }, { status: 401 });
   }
 
   const parsed = body.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
+    console.warn("[cache] revalidação recusada: corpo inválido");
     return Response.json({ error: "invalid body" }, { status: 400 });
   }
   // O `revalidate_url` de outro site a apontar para aqui é um erro de
   // configuração, não uma alteração a ignorar.
   if (parsed.data.site && parsed.data.site !== SITE_SLUG) {
+    console.warn("[cache] revalidação recusada: outro site", {
+      site: parsed.data.site,
+      collection: parsed.data.collection,
+    });
     return Response.json(
       { error: `wrong site: ${parsed.data.site}` },
       { status: 400 },
@@ -73,6 +93,13 @@ export async function POST(request: Request) {
       collection: parsed.data.collection,
       keys: parsed.data.keys,
       tags,
+    });
+  } else {
+    // Normal para coleções de outros sites; uma coleção que este site lê e
+    // aparece aqui está em falta no mapa de `cache-tags.ts`.
+    console.info("[cache] nada a revalidar: coleção que o site não conhece", {
+      event: parsed.data.event,
+      collection: parsed.data.collection,
     });
   }
   return Response.json({ revalidated: tags });

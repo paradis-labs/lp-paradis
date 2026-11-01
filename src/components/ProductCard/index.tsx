@@ -42,12 +42,12 @@ export default function ProductCard({
           {String(number).padStart(2, "0")}
         </span>
       </div>
-      <h2 className="font-gilroy text-[30px] leading-[1.1] font-medium tracking-[-0.02em] md:text-4xl">
+      <h2 className="font-gilroy text-4xl leading-[1.1] font-medium tracking-[-0.02em]">
         {project.title}
       </h2>
       <div
         data-cursor-text={copy.cursor}
-        className="relative flex h-65 items-center justify-center overflow-hidden rounded-xl bg-primary md:h-95"
+        className="relative flex h-65 items-center justify-center overflow-hidden rounded-xl bg-cover-ground md:h-95"
       >
         {project.coverImage ? (
           <Image

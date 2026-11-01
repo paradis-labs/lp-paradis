@@ -19,7 +19,7 @@ Inputs: 52px de altura, contorno de 1,5px `#edeef0`, raio 12px; `#d4d7da` em hov
 ### Requirement: Mapeamento dos textos no layout v3
 
 - O eyebrow do formulário (`form.eyebrow`) SHALL passar a ser o eyebrow do `PageHeader`, com piso "Get a Quote" / "Pedir orçamento".
-- A pill de disponibilidade SHALL renderizar por baixo da introdução, com o ponto a pulsar (parado com movimento reduzido), e continua opcional e controlada pelo CMS.
+- O `PageHeader` SHALL terminar na introdução, sem a pill de disponibilidade, como no artboard.
 - O título do cartão ("Tell us about your project") e o subtítulo ("A few details are enough to get started.") SHALL ser cópia de UI localizada, porque o formulário do hcms não tem esses campos.
 - O piso do rótulo da mensagem SHALL passar a "Your project" / "O seu projecto", e o placeholder da textarea ("Goals, timeline, budget range — anything that helps us understand it.") SHALL ser cópia de UI localizada.
 
@@ -34,6 +34,12 @@ Os restantes rótulos, o botão, a nota de privacidade e as mensagens continuam 
 
 - **WHEN** `/pt/get-quote` é servido com o CMS vazio
 - **THEN** todo o texto do ecrã, incluindo a cópia de UI nova e o placeholder, está em português
+
+#### Scenario: Cabeçalho sem pill
+
+- **WHEN** `/en/get-quote` é servida e o bloco de hero da página `contact` no hcms ainda tem `highlights`
+- **THEN** o `PageHeader` mostra o eyebrow, o headline e a introdução, e nada por baixo
+- **AND** o cartão do formulário começa à mesma distância da introdução que no artboard
 
 ### Requirement: O campo de empresa depende do formulário do hcms
 
@@ -50,3 +56,10 @@ Sem o campo no hcms, a grelha de dados pessoais SHALL mostrar só nome e e-mail,
 
 - **WHEN** o formulário do hcms não tem um campo `company`
 - **THEN** a página não mostra o input de empresa e o formulário continua a submeter
+
+## REMOVED Requirements
+
+### Requirement: A pill de disponibilidade é opcional e controlada pelo CMS
+
+**Reason**: o artboard v3 da página de orçamento deixou de ter a pill. O mockup ainda define o CSS do ponto (`.q-dot`), mas não o desenha.
+**Migration**: o site deixa de ler `highlights` do bloco de hero da página `contact` e de expor `QuotePage.availability`. No hcms, limpa-se o conteúdo `highlights` desse bloco no site `paradis`, no seed do `Template-multisite-tenant` ou por um editor. O campo não se apaga, porque o schema é partilhado com outros sites.

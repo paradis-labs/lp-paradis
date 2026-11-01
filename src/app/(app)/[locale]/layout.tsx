@@ -22,8 +22,11 @@ export const metadata: Metadata = {
   description: "",
 };
 
+// Sem o 700 (P3 da Motion spec): nenhum texto em Inter usa `font-bold` (os
+// títulos são Gilroy), e o negrito do texto rico é 600 em `globals.css`. Um
+// `font-bold` novo em Inter sairia sintetizado.
 const inter = Inter({
-  weight: ["400", "500", "600", "700"],
+  weight: ["400", "500", "600"],
   subsets: ["latin"],
 });
 

@@ -1,4 +1,4 @@
-import { ArrowRightDown } from "@solar-icons/react";
+import { ArrowDownRight } from "@/components/Glyphs";
 import type { NavBar as NavBarContent } from "@/content";
 import type { Locale } from "@/i18n/routing";
 import { localizedHref } from "@/lib/locale-href";
@@ -25,7 +25,7 @@ const sectionHash = (url: string) =>
   url.includes("#") ? url.split("#")[1] : undefined;
 
 export default async function Header({ locale, ...args }: HeaderProps) {
-  const logoSrc = args.logo?.image?.url ?? "/logo.svg";
+  const logoSrc = args.logo?.image?.url ?? "/logo.png";
   const logoHref = localizedHref(args.logo?.url ?? "/", locale);
   const logoWidth = args.logo?.width ?? 134;
   const logoHeight = args.logo?.height ?? 25;
@@ -98,7 +98,7 @@ export default async function Header({ locale, ...args }: HeaderProps) {
                 size="sm"
                 variant={variant}
                 textSwap
-                trailingIcon={disc ? ArrowRightDown : undefined}
+                trailingIcon={disc ? ArrowDownRight : undefined}
                 circleIcon={disc}
               >
                 {btn.label}

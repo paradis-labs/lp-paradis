@@ -24,7 +24,7 @@ export default function NavBarRoot({ children, className }: NavBarRootProps) {
   return (
     <nav
       aria-label="Main"
-      className="sticky top-0 z-40 flex w-full justify-center bg-white/55 py-6 backdrop-blur-[20px] backdrop-saturate-[1.6]"
+      className="sticky top-0 z-40 flex w-full justify-center bg-white/55 py-6 backdrop-blur-md backdrop-saturate-[1.6]"
     >
       <div
         className={twJoin(

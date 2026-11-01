@@ -1,7 +1,7 @@
-import { ArrowRightDown } from "@solar-icons/react";
 import { notFound } from "next/navigation";
 import type React from "react";
 import CalendlyCta from "@/components/CalendlyCta";
+import { ArrowDownRight } from "@/components/Glyphs";
 
 function Case({
   title,
@@ -56,7 +56,7 @@ export default async function CalendlyFixturePage() {
         <CalendlyCta
           variant="outline"
           href="https://calendly.com/geral-paradis/30min"
-          trailingIcon={ArrowRightDown}
+          trailingIcon={ArrowDownRight}
           circleIcon
           textSwap
         >

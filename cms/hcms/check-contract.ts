@@ -59,6 +59,11 @@ const FORM_FIELDS: Record<string, { choicesSource?: string }> = {
   message: {},
 };
 const SITE_COLLECTIONS = ["offerings", "projects", "testimonials", "faqs"];
+// Campos que o site pede e que entraram no schema depois das coleções: um
+// campo em falta faz o Directus recusar o pedido inteiro, e com ele a página.
+const REQUIRED_FIELDS: Record<string, string[]> = {
+  projects: ["short_name"],
+};
 
 const read = createReader("lp-paradis-cms-check/1.0");
 
@@ -200,6 +205,24 @@ async function checkCollections(siteId: string) {
   }
 }
 
+async function checkFields(siteId: string) {
+  for (const [collection, names] of Object.entries(REQUIRED_FIELDS)) {
+    for (const name of names) {
+      const label = `campo ${collection}.${name}`;
+      try {
+        await read(collection, {
+          fields: [name],
+          filter: { site: { _eq: siteId } },
+          limit: 1,
+        });
+        pass(label);
+      } catch (error) {
+        fail(label, `pedido recusado: ${errorMessage(error)}`);
+      }
+    }
+  }
+}
+
 async function main() {
   const siteId = await checkSite();
   if (siteId) {
@@ -207,6 +230,7 @@ async function main() {
     await checkNavigations(siteId);
     await checkForm(siteId);
     await checkCollections(siteId);
+    await checkFields(siteId);
   }
 
   for (const { ok, what, detail } of results) {

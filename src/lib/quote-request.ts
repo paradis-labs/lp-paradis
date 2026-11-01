@@ -99,8 +99,7 @@ export type QuoteMessages = Record<
 
 export const QUOTE_MESSAGE_FALLBACK: Record<Locale, QuoteMessages> = {
   en: {
-    success:
-      "Thanks — we've got your brief. We'll reply within one business day.",
+    success: "We'll reply within one business day.",
     error: "Something went wrong sending your enquiry. Please try again.",
     nameRequired: "Please tell us your name.",
     emailRequired: "Please enter your email.",
@@ -109,8 +108,7 @@ export const QUOTE_MESSAGE_FALLBACK: Record<Locale, QuoteMessages> = {
     tooLong: "That's a bit too long — please shorten it.",
   },
   pt: {
-    success:
-      "Obrigado — recebemos o seu briefing. Respondemos dentro de um dia útil.",
+    success: "Respondemos dentro de um dia útil.",
     error: "Algo correu mal ao enviar o seu pedido. Tente novamente.",
     nameRequired: "Diga-nos o seu nome.",
     emailRequired: "Indique o seu e-mail.",

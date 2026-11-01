@@ -24,7 +24,6 @@ const FALLBACK: Record<
   {
     headline: string;
     intro: string;
-    availabilityLabel: string;
     eyebrow: string;
     nameLabel: string;
     emailLabel: string;
@@ -37,7 +36,7 @@ const FALLBACK: Record<
     cardSubtitle: string;
     messagePlaceholder: string;
     optional: string;
-    successNote: string;
+    successTitle: string;
     sendAnother: string;
   }
 > = {
@@ -45,7 +44,6 @@ const FALLBACK: Record<
     headline: "Let's build something that moves you forward.",
     intro:
       "We're excited to hear what you're building. Drop the details below and we'll reply within one business day.",
-    availabilityLabel: "Available for new projects",
     eyebrow: "Get a Quote",
     nameLabel: "Your name",
     emailLabel: "Your email",
@@ -59,14 +57,13 @@ const FALLBACK: Record<
     messagePlaceholder:
       "Goals, timeline, budget range — anything that helps us understand it.",
     optional: "(optional)",
-    successNote: "We'll reply within one business day.",
+    successTitle: "Thanks — your enquiry is in.",
     sendAnother: "Send another",
   },
   pt: {
     headline: "Vamos construir algo que o faça avançar.",
     intro:
       "Queremos saber o que está a construir. Deixe os detalhes abaixo e respondemos dentro de um dia útil.",
-    availabilityLabel: "Disponíveis para novos projectos",
     eyebrow: "Pedir orçamento",
     nameLabel: "O seu nome",
     emailLabel: "O seu e-mail",
@@ -80,7 +77,7 @@ const FALLBACK: Record<
     messagePlaceholder:
       "Objectivos, prazos, orçamento — tudo o que nos ajude a perceber.",
     optional: "(opcional)",
-    successNote: "Respondemos dentro de um dia útil.",
+    successTitle: "Obrigado — o seu pedido chegou.",
     sendAnother: "Enviar outro",
   },
 };
@@ -103,17 +100,12 @@ export default function GetQuote({
   initialFormState,
   ...content
 }: GetQuoteProps) {
-  const { availability, form } = content;
+  const { form } = content;
   const fallback = FALLBACK[locale];
   const messageFallback = QUOTE_MESSAGE_FALLBACK[locale];
 
   const headline = textOr(content.hero.headline, fallback.headline);
   const intro = textOr(content.hero.intro, fallback.intro);
-  const availabilityLabel = textOr(
-    availability.label,
-    fallback.availabilityLabel,
-  );
-  const location = availability.location?.trim() ?? "";
   // O provider já garante slug e título não vazios; só-espaços continua a
   // contar como vazio, e um chip sem rótulo não é selecionável por ninguém.
   const interests: QuoteInterest[] = form.interests.flatMap((service) => {
@@ -147,37 +139,19 @@ export default function GetQuote({
   const action = submitQuoteRequest.bind(null, locale);
   const showAside = hasContactAside(aside);
 
-  // A pill de disponibilidade, controlada pelo CMS. O ponto pulsa (parado com
-  // movimento reduzido); sem localidade, o separador também não aparece.
-  const pill = availability.enabled ? (
-    <p className="inline-flex w-fit items-center gap-2.5 rounded-full border border-border bg-white px-4 py-2 text-sm text-primary">
-      <span aria-hidden="true" className="relative flex size-2">
-        <span className="absolute inset-0 rounded-full bg-green-500 opacity-60 motion-safe:animate-ping" />
-        <span className="relative size-2 rounded-full bg-green-500" />
-      </span>
-      {availabilityLabel}
-      {location ? (
-        <span className="text-mist">
-          {"·"} {location}
-        </span>
-      ) : null}
-    </p>
-  ) : null;
-
   return (
     <main>
       <PageHeader
         eyebrow={textOr(form.eyebrow, fallback.eyebrow)}
         title={headline}
         lead={intro}
-        after={pill}
       />
 
       {form.enabled || showAside ? (
         <section className="flex w-full justify-center pt-2 pb-24">
           <div
             className={cn(
-              "grid w-full max-w-7xl items-start gap-6 px-3 md:px-4 xl:px-0",
+              "gutter grid w-full max-w-7xl items-start gap-6",
               form.enabled && showAside && "lg:grid-cols-[minmax(0,1fr)_400px]",
             )}
           >
@@ -200,11 +174,20 @@ export default function GetQuote({
                       fallback.interestsLabel,
                     ),
                     message: textOr(form.messageLabel, fallback.messageLabel),
-                    messagePlaceholder: fallback.messagePlaceholder,
+                    messagePlaceholder: textOr(
+                      form.messagePlaceholder,
+                      fallback.messagePlaceholder,
+                    ),
                     submit: textOr(form.submitLabel, fallback.submitLabel),
                     privacyNote: textOr(form.privacyNote, fallback.privacyNote),
-                    successNote: fallback.successNote,
-                    sendAnother: fallback.sendAnother,
+                    successTitle: textOr(
+                      form.successTitle,
+                      fallback.successTitle,
+                    ),
+                    sendAnother: textOr(
+                      form.successAgainLabel,
+                      fallback.sendAnother,
+                    ),
                   }}
                   messages={messages}
                   initialState={initialFormState}

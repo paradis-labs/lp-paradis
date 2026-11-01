@@ -39,3 +39,13 @@
 - [ ] 6.3 Teclado: Tab por todos os campos e chips, Espaço nos chips, foco depois de "Send another"
 - [ ] 6.4 `/pt/get-quote` com o CMS vazio (fixture): nenhuma string em inglês
 - [x] 6.5 `npm run lint` e `npm run build` sem erros
+
+## 7. Remover a pill de disponibilidade (D7)
+
+- [x] 7.1 `types.ts`: remover `QuotePage.availability`
+- [x] 7.2 `providers/hcms.ts`: deixar de ler `highlights` em `getQuotePage` (o `trList` e o mapeamento `availability`); confirmar que `cms/hcms/check-contract.ts` não o exige
+- [x] 7.3 `GetQuote/index.tsx`: remover a pill, o piso `availabilityLabel` (EN e PT) e o `after` passado ao `PageHeader`; se o `after` ficar sem usos, removê-lo do `PageHeader`
+- [x] 7.4 `/fixtures/get-quote`: remover `availability` do `BASE` e os casos `availability.enabled: false` e `availability.location: ""`, e atualizar o comentário de cenários cobertos
+- [ ] 7.5 hcms (fora deste repo): limpar `highlights` do bloco de hero da página `contact` do site `paradis`, no seed do `Template-multisite-tenant` e/ou pelo editor, sem apagar o campo
+- [ ] 7.6 Comparar `/en/get-quote` e `/pt/get-quote` com o artboard a 1440 e 390px: o hero termina na introdução e o cartão fica à distância do mockup
+- [ ] 7.7 `npm run lint` e `npm run build` sem erros

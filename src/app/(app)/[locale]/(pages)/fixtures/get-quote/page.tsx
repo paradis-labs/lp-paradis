@@ -13,10 +13,10 @@ import type { QuoteFormState } from "@/lib/quote-request";
 //   quote-request-intake
 //     • "O estado de sucesso permite um novo envio"     → caso 3
 //   quote-contact-aside
-//     • "O aside degrada por grupo"                     → casos 10 a 14
-//     • "Os estados do aside são exercitáveis"          → casos 10 a 15
-// Os casos 4 a 9 vêm da fixture anterior (`add-get-quote-page`) e continuam
-// válidos no layout v3.
+//     • "O aside degrada por grupo"                     → casos 8 a 12
+//     • "Os estados do aside são exercitáveis"          → casos 8 a 13
+// Os casos 4 a 7 vêm da fixture anterior (`add-get-quote-page`) e continuam
+// válidos no layout v3. Os da pill de disponibilidade saíram com ela (D7).
 
 const service = (slug: string, title: string): Service => ({
   key: slug,
@@ -31,7 +31,6 @@ const service = (slug: string, title: string): Service => ({
 const EMPTY_GLOBAL: QuotePage = {
   seo: { metaTitle: null, metaDescription: null },
   hero: { headline: null, intro: null },
-  availability: { enabled: true, label: null, location: null },
   form: {
     enabled: true,
     eyebrow: null,
@@ -43,6 +42,9 @@ const EMPTY_GLOBAL: QuotePage = {
     messageLabel: null,
     submitLabel: null,
     privacyNote: null,
+    messagePlaceholder: null,
+    successTitle: null,
+    successAgainLabel: null,
     messages: {
       success: null,
       error: null,
@@ -65,11 +67,6 @@ const BASE: QuotePage = {
     intro:
       "We're excited to hear what you're building. Drop the details below and we'll reply within one business day.",
   },
-  availability: {
-    enabled: true,
-    label: "Available for new projects",
-    location: "Luanda, Angola",
-  },
   form: {
     enabled: true,
     eyebrow: "Get a Quote",
@@ -86,8 +83,12 @@ const BASE: QuotePage = {
     messageLabel: "Your project",
     submitLabel: "Send enquiry",
     privacyNote: "Your details are safe — no ads, no spam.",
+    messagePlaceholder:
+      "Goals, timeline, budget range — anything that helps us understand it.",
+    successTitle: "Thanks — your enquiry is in.",
+    successAgainLabel: "Send another",
     messages: {
-      success: "Thanks — we've got your brief.",
+      success: "We'll be in touch within one business day.",
       error: "Something went wrong. Please try again.",
       nameRequired: "Please tell us your name.",
       emailRequired: "Please enter your email.",
@@ -101,7 +102,7 @@ const BASE: QuotePage = {
 type Aside = Omit<QuoteContactAsideProps, "locale">;
 
 const FULL_ASIDE: Aside = {
-  reachHeading: "Reach Us Directly",
+  reachHeading: "Reach us directly",
   socialHeading: "Elsewhere",
   email: "geral@paradis.host",
   call: {
@@ -171,7 +172,7 @@ const CASES: Array<{
     scenario: "Global inteira sem conteúdo",
     prop: "EMPTY_GLOBAL — textos a null, listas vazias",
     expected:
-      "renderiza sem lançar erro, com o piso de cada campo, e o layout permanece íntegro — headline, intro, pill e formulário todos presentes",
+      "renderiza sem lançar erro, com o piso de cada campo, e o layout permanece íntegro — headline, intro e formulário todos presentes",
     args: EMPTY_GLOBAL,
     aside: EMPTY_ASIDE,
   },
@@ -181,26 +182,6 @@ const CASES: Array<{
     expected:
       "a secção de interesses desaparece INTEIRA, incluindo o rótulo — não fica um cabeçalho a apontar para o nada — e o resto do formulário continua utilizável",
     args: { ...BASE, form: { ...BASE.form, interests: [] } },
-  },
-  {
-    scenario: "Pill de disponibilidade desativada",
-    prop: "availability.enabled: false",
-    expected:
-      "a pill não é renderizada e o parágrafo de intro não muda de alinhamento nem herda espaço vazio no lugar dela",
-    args: {
-      ...BASE,
-      availability: { ...BASE.availability, enabled: false },
-    },
-  },
-  {
-    scenario: "Pill ativa sem localidade",
-    prop: 'availability.location: ""',
-    expected:
-      "a pill mostra só o ponto e o texto de estado; o separador `·` que precede a localidade também desaparece",
-    args: {
-      ...BASE,
-      availability: { ...BASE.availability, location: "" },
-    },
   },
   {
     scenario: "Botão sem rótulo authorado",
