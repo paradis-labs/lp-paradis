@@ -64,6 +64,17 @@ const SITE_COLLECTIONS = ["offerings", "projects", "testimonials", "faqs"];
 const REQUIRED_FIELDS: Record<string, string[]> = {
   projects: ["short_name"],
 };
+// Os campos SEO do site (`seo-metadata`): o `readSite` pede-os em todas as
+// leituras, por isso um campo recusado derrubava a navbar e o footer também.
+const SITE_FIELDS = [
+  "frontend_url",
+  "og_image",
+  "translations.default_title",
+  "translations.title_template",
+  "translations.meta_description",
+  "translations.og_image_alt",
+  "translations.og_image",
+];
 
 const read = createReader("lp-paradis-cms-check/1.0");
 
@@ -223,9 +234,26 @@ async function checkFields(siteId: string) {
   }
 }
 
+async function checkSiteFields() {
+  for (const name of SITE_FIELDS) {
+    const label = `campo sites.${name}`;
+    try {
+      await read("sites", {
+        fields: [name],
+        filter: { slug: { _eq: SITE_SLUG } },
+        limit: 1,
+      });
+      pass(label);
+    } catch (error) {
+      fail(label, `pedido recusado: ${errorMessage(error)}`);
+    }
+  }
+}
+
 async function main() {
   const siteId = await checkSite();
   if (siteId) {
+    await checkSiteFields();
     await checkPages(siteId);
     await checkNavigations(siteId);
     await checkForm(siteId);

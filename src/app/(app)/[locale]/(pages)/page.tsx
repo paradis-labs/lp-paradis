@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import CalendlyCta from "@/components/CalendlyCta";
 import FAQSection from "@/components/FAQSection";
 import { ArrowDownRight } from "@/components/Glyphs";
@@ -9,10 +10,20 @@ import Reveal from "@/components/Reveal";
 import ServicesSection from "@/components/ServicesSection";
 import TestimonialsSection from "@/components/TestimonialsSection";
 import { VideoAutoPause } from "@/components/ui/video-autopause";
-import { getHomepage } from "@/content";
+import { getHomepage, getSiteSeo } from "@/content";
 import { requireLocale } from "@/i18n/require-locale";
 import type { Locale } from "@/i18n/routing";
 import { localizedCtaHref } from "@/lib/locale-href";
+import { pageMetadata } from "@/lib/page-metadata";
+
+// Sem `title`: a home usa o `title.default` do layout, e um título aqui sairia
+// com o molde ("Paradis — Paradis").
+export async function generateMetadata(props: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const locale = requireLocale((await props.params).locale);
+  return pageMetadata(await getSiteSeo(locale), locale, "");
+}
 
 // O nome acessível do marquee de serviços.
 const MARQUEE_LABEL: Record<Locale, string> = {

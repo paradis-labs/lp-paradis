@@ -24,7 +24,8 @@ export type ContentRead =
   | "homepage"
   | "products-page"
   | "product"
-  | "quote-page";
+  | "quote-page"
+  | "seo";
 
 /** As coleções que alguma leitura popula. */
 export type ContentCollection =
@@ -53,6 +54,8 @@ export const READ_COLLECTIONS: Record<ContentRead, ContentCollection[]> = {
   "products-page": ["projects", "media"],
   product: ["projects", "testimonials", "media"],
   "quote-page": ["services"],
+  // Os metadados vêm do `sites`; a imagem de partilha é um ficheiro.
+  seo: ["media"],
 };
 
 // ── Invalidação vinda do hcms ──────────────────────────────────────────────
@@ -71,8 +74,13 @@ const PAGE_READS = [
 ];
 
 const HCMS_COLLECTION_TAGS: Record<string, string[]> = {
-  // O site dá o logo, a tagline, o copyright, as redes e o e-mail.
-  sites: [readTag("navbar"), readTag("footer"), collectionTag("contact")],
+  // O site dá o logo, a tagline, o copyright, as redes, o e-mail e o SEO.
+  sites: [
+    readTag("navbar"),
+    readTag("footer"),
+    collectionTag("contact"),
+    readTag("seo"),
+  ],
   navigations: [readTag("navbar"), readTag("footer")],
   navigation_items: [readTag("navbar"), readTag("footer")],
   pages: PAGE_READS,

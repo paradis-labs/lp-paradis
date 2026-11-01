@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import PageHeader from "@/components/PageHeader";
 import ProductsListing from "@/components/ProductsListing";
-import { getProductsPage } from "@/content";
+import { getProductsPage, getSiteSeo } from "@/content";
 import { requireLocale } from "@/i18n/require-locale";
 import type { Locale } from "@/i18n/routing";
 import { textOr } from "@/lib/cms-text";
+import { pageMetadata } from "@/lib/page-metadata";
 
 interface ProductsRouteProps {
   params: Promise<{ locale: string }>;
@@ -28,13 +29,16 @@ const FALLBACK: Record<
   },
 };
 
-// Um campo vazio cai na `metadata` estática do layout, e não no piso: o piso é
+// Um campo vazio cai nos metadados do site (layout), e não no piso: o piso é
 // para o ecrã, e um `<title>` inventado esconderia que o CMS não o tem.
 export async function generateMetadata({
   params,
 }: ProductsRouteProps): Promise<Metadata> {
   const locale = requireLocale((await params).locale);
-  const content = await getProductsPage(locale);
+  const [content, seo] = await Promise.all([
+    getProductsPage(locale),
+    getSiteSeo(locale),
+  ]);
 
   const title = content.title?.trim();
   const description = content.lead?.trim();
@@ -42,6 +46,7 @@ export async function generateMetadata({
   return {
     ...(title ? { title } : {}),
     ...(description ? { description } : {}),
+    ...pageMetadata(seo, locale, "/products", { title, description }),
   };
 }
 

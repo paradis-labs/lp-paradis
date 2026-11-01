@@ -139,6 +139,24 @@ export type Contact = {
   email: string | null;
 };
 
+// ── SEO do site ────────────────────────────────────────────────────────────
+
+/** Os metadados de pesquisa e partilha do site (`seo-metadata`). */
+export type SiteSeo = {
+  /**
+   * A origem pública do site (`https://paradis.host`), sem barra final. `null`
+   * sem ela: sem os URLs absolutos que dela dependem (canonical, sitemap).
+   */
+  baseUrl: string | null;
+  /** O título da home e o piso das páginas sem título. */
+  defaultTitle: string | null;
+  /** O molde dos títulos das páginas, com `%s` ("%s — Paradis"). */
+  titleTemplate: string | null;
+  description: string | null;
+  /** A imagem de partilha, a mesma nos dois idiomas; o `alt` é o do idioma. */
+  image: Media | null;
+};
+
 // ── Coleções referidas pelas páginas ──────────────────────────────────────
 
 export type Hero = {
@@ -292,6 +310,11 @@ export type ProductDetail = Project & {
   solution: string | null;
   steps: ProductStep[];
   gallery: Media[];
+  /**
+   * A capa como imagem de partilha (`og:image`): 1200×630, leve, cortada ao
+   * centro. `null` sem capa.
+   */
+  shareImage: Media | null;
   /** `null` sem testemunho ligado, ou com ele em rascunho. */
   testimonial: Testimonial | null;
 };

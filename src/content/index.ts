@@ -83,6 +83,13 @@ export async function getQuotePage(locale: Locale) {
   return provider.getQuotePage(locale);
 }
 
+// Os metadados de pesquisa e partilha do site (`seo-metadata`).
+export async function getSiteSeo(locale: Locale) {
+  "use cache";
+  tag("seo", locale);
+  return provider.getSiteSeo(locale);
+}
+
 // O contacto é o e-mail do site: invalida-se pela tag `contact`, que a
 // alteração do item `sites` no hcms também dispara.
 const CONTACT: ContentCollection = "contact";

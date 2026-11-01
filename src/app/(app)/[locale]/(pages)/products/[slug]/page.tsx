@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import ProductDetail from "@/components/ProductDetail";
-import { getProduct, getProductSlugs } from "@/content";
+import { getProduct, getProductSlugs, getSiteSeo } from "@/content";
 import { requireLocale } from "@/i18n/require-locale";
+import { pageMetadata } from "@/lib/page-metadata";
 
 interface ProductRouteProps {
   params: Promise<{ locale: string; slug: string }>;
@@ -19,14 +20,25 @@ export async function generateMetadata({
   params,
 }: ProductRouteProps): Promise<Metadata> {
   const { locale: raw, slug } = await params;
-  const content = await getProduct(requireLocale(raw), slug);
+  const locale = requireLocale(raw);
+  const [content, seo] = await Promise.all([
+    getProduct(locale, slug),
+    getSiteSeo(locale),
+  ]);
   if (!content) return {};
 
   const title = content.product.title.trim();
   const description = content.product.description.trim();
+  // A partilha mostra a capa do produto (a variante 1200×630); sem capa, a
+  // imagem do site.
   return {
     ...(title ? { title } : {}),
     ...(description ? { description } : {}),
+    ...pageMetadata(seo, locale, `/products/${slug}`, {
+      title,
+      description,
+      image: content.product.shareImage,
+    }),
   };
 }
 

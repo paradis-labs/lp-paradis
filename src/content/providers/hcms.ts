@@ -32,6 +32,7 @@ import type {
   QuotePage,
   QuoteRequestInput,
   Service,
+  SiteSeo,
   Testimonial,
   TestimonialSocial,
 } from "../types";
@@ -313,6 +314,34 @@ const rawFile = z
     };
   });
 
+// A variante de partilha de uma imagem (`og:image`): 1200×630 em JPEG, que o
+// Directus gera a pedido em `/assets` (público, como o original). As capas são
+// PNG de 3200×2400 com 1,5 a 3 MB: o WhatsApp não mostra pré-visualizações tão
+// pesadas, e as redes cortavam o 4:3 para 1.91:1 de qualquer forma.
+const SHARE_IMAGE = { width: 1200, height: 630 };
+
+function shareVariant(media: Media | null): Media | null {
+  if (!media) return null;
+  const params = new URLSearchParams({
+    width: String(SHARE_IMAGE.width),
+    height: String(SHARE_IMAGE.height),
+    fit: "cover",
+    format: "jpg",
+    quality: "80",
+  });
+  return { ...media, url: `${media.url}?${params}`, ...SHARE_IMAGE };
+}
+
+// Um ficheiro traduzido, com o mesmo fallback campo a campo do `tr`: o do
+// idioma pedido e, vazio, o do padrão.
+function trFile(record: Translated, field: string, language: Language) {
+  for (const code of chain(language)) {
+    const file = rawFile.parse(row(record, code)?.[field]);
+    if (file) return file;
+  }
+  return null;
+}
+
 // Os URLs authorados no hcms trazem o locale (`/en/get-quote`), e os
 // componentes prefixam o locale corrente. O prefixo sai aqui. Um caminho que
 // seja o slug traduzido de uma página (`/pedir-orcamento`) passa à rota fixa
@@ -354,8 +383,10 @@ const rawSocial = z.object({
 const rawSite = z.object({
   name: z.string().nullish(),
   email: z.string().nullish(),
+  frontend_url: z.string().nullish(),
   logo: rawFile,
   logo_inverse: rawFile,
+  og_image: rawFile,
   social_links: z.array(z.unknown()).nullish(),
   translations,
 });
@@ -365,10 +396,15 @@ async function readSite(where: Where) {
     fields: [
       "name",
       "email",
+      "frontend_url",
       "social_links",
       "translations.*",
       ...fileFields("logo"),
       ...fileFields("logo_inverse"),
+      ...fileFields("og_image"),
+      // A imagem de partilha de cada idioma (`seo-og-per-locale`): com os
+      // campos do ficheiro, e não só o id que o `translations.*` traz.
+      ...fileFields("translations.og_image"),
     ],
     filter: { slug: { _eq: SITE_SLUG } },
     limit: 1,
@@ -772,6 +808,53 @@ export async function getFooter(locale: Locale): Promise<Footer> {
 export async function getContact(locale: Locale): Promise<Contact | null> {
   const site = await readSite({ slug: "contact", locale });
   return { email: site.email?.trim() ? site.email : null };
+}
+
+// ── SEO ────────────────────────────────────────────────────────────────────
+
+// O `frontend_url` do site como origem (`https://paradis.host`). Vazio ou
+// inválido vale `null`, registado: o site renderiza sem canonical nem sitemap,
+// e não com URLs absolutos errados.
+function siteOrigin(value: string | null | undefined, where: Where) {
+  if (!filled(value)) {
+    console.error("[content] campo em falta", {
+      ...where,
+      field: "frontend_url",
+    });
+    return null;
+  }
+  try {
+    const url = new URL(value.trim());
+    if (url.protocol === "https:" || url.protocol === "http:")
+      return url.origin;
+  } catch {}
+  console.error("[content] campo inválido", {
+    ...where,
+    field: "frontend_url",
+    value,
+  });
+  return null;
+}
+
+export async function getSiteSeo(locale: Locale): Promise<SiteSeo> {
+  const where = { slug: "seo", locale };
+  const site = await readSite(where);
+  const language = LANGUAGES[locale];
+
+  // A imagem do idioma (`seo-og-per-locale`), depois a da tradução padrão e,
+  // sem nenhuma, a do site. O texto alternativo é o do idioma.
+  const file = trFile(site, "og_image", language) ?? site.og_image;
+  const image = file
+    ? { ...file, alt: tr(site, "og_image_alt", language) ?? file.alt }
+    : null;
+
+  return {
+    baseUrl: siteOrigin(site.frontend_url, where),
+    defaultTitle: tr(site, "default_title", language),
+    titleTemplate: tr(site, "title_template", language),
+    description: tr(site, "meta_description", language),
+    image,
+  };
 }
 
 // ── Coleções ───────────────────────────────────────────────────────────────
@@ -1184,6 +1267,7 @@ export async function getProduct(
         "steps",
       ) satisfies ProductStep[],
       gallery,
+      shareImage: shareVariant(projects[index].coverImage),
       testimonial: (testimonials[0] as Testimonial | undefined) ?? null,
     },
     next: projects.length > 1 ? projects[(index + 1) % projects.length] : null,

@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import { cache } from "react";
 import GetQuote from "@/components/GetQuote";
-import { getContact, getFooter, getQuotePage } from "@/content";
+import { getContact, getFooter, getQuotePage, getSiteSeo } from "@/content";
 import { requireLocale } from "@/i18n/require-locale";
 import type { Locale } from "@/i18n/routing";
 import { localizedCtaHref } from "@/lib/locale-href";
+import { pageMetadata } from "@/lib/page-metadata";
 
 interface GetQuoteRouteProps {
   params: Promise<{ locale: string }>;
@@ -16,7 +17,10 @@ export async function generateMetadata({
   params,
 }: GetQuoteRouteProps): Promise<Metadata> {
   const locale = requireLocale((await params).locale);
-  const content = await getContent(locale);
+  const [content, seo] = await Promise.all([
+    getContent(locale),
+    getSiteSeo(locale),
+  ]);
 
   const title = content.seo.metaTitle?.trim();
   const description = content.seo.metaDescription?.trim();
@@ -24,6 +28,7 @@ export async function generateMetadata({
   return {
     ...(title ? { title } : {}),
     ...(description ? { description } : {}),
+    ...pageMetadata(seo, locale, "/get-quote", { title, description }),
   };
 }
 
