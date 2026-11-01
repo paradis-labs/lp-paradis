@@ -36,18 +36,25 @@ Este requisito existe porque o footer deixa de ser montado no layout partilhado 
 
 O sistema SHALL escolher a composição do footer a partir da rota pedida, e essa escolha SHALL viver em código e não em conteúdo do CMS.
 
-A escolha por rota — e não por flag de CMS — é deliberada: uma flag ligaria a variante em todas as rotas ou em nenhuma, que é precisamente o que este requisito precisa de evitar.
+A escolha por rota, e não por uma flag de CMS, é deliberada: uma flag ligaria a variante em todas as rotas ou em nenhuma, que é precisamente o que este requisito precisa de evitar.
 
-#### Scenario: A faixa de contacto direto aparece só no /get-quote
+No v3 há duas composições: a de base, com a faixa "Ready to build?" no topo, e a de `/get-quote`, sem essa faixa, porque a página é o destino do CTA. Nenhuma das duas tem faixa de contacto direto, que passou para o aside da página.
+
+#### Scenario: O footer de /get-quote não tem faixa CTA
 
 - **WHEN** um visitante carrega `/en/get-quote` ou `/pt/get-quote`
-- **THEN** o footer inclui a faixa de contacto direto
+- **THEN** o primeiro bloco dentro do `<footer>` é o logo com a tagline
+- **AND** o footer não inclui a faixa "Ready to build?" nem a faixa de contacto direto
 
-#### Scenario: Nenhuma outra rota ganha a faixa
+#### Scenario: As outras rotas mantêm a faixa CTA
 
 - **WHEN** um visitante carrega qualquer rota pública que não `/get-quote`
-- **THEN** o footer NÃO inclui a faixa de contacto direto
-- **AND** o seu HTML é equivalente ao produzido antes desta mudança
+- **THEN** o primeiro bloco dentro do `<footer>` é a faixa "Ready to build?"
+
+#### Scenario: O footer de /get-quote não lê o Contact
+
+- **WHEN** a folha `@footer/get-quote` é inspecionada
+- **THEN** não chama `getContact`, que passou para a página
 
 ### Requirement: O footer continua a ser renderizado no servidor
 
@@ -97,3 +104,29 @@ Este é um invariante a **preservar**, não um comportamento a introduzir. O `te
 - **AND** o footer não é servido dentro de um wrapper com `opacity: 0`
 
 Este cenário é o que apanha o modo de falha real: o Next aplica o `template.tsx` do segmento a **todos** os slots do layout, não só a `children`. Um `template.tsx` colocado acima do slot dá ao footer a sua própria instância do wrapper de animação, e o footer passa a sair do servidor invisível à espera de hidratar — o defeito que `prevent-invisible-text` existe para impedir, reintroduzido pela porta das traseiras. A mitigação é manter o `template.tsx` num segmento abaixo do layout que consome o slot.
+
+### Requirement: A composição do footer acompanha a rota em navegação soft
+
+Numa navegação do lado do cliente, o footer SHALL passar para a composição da rota de destino, e não conservar a composição da rota de origem. Para isso, o slot do footer SHALL ter uma folha que case com cada rota pública: uma para a raiz, uma catch-all para qualquer rota sem composição própria, e as folhas específicas das variantes. `default.tsx` SHALL continuar a existir como rede de 404 em hard navigation.
+
+As folhas que renderizam o footer base SHALL delegar num único módulo partilhado.
+
+#### Scenario: De `/get-quote` para a home por clique
+
+- **WHEN** um visitante está em `/en/get-quote` e clica no logo ou num link para `/en`
+- **THEN** o footer em `/en` não inclui a faixa de contacto direto
+
+#### Scenario: De `/get-quote` para uma fixture por clique
+
+- **WHEN** um programador está em `/en/get-quote` em desenvolvimento e navega por clique para `/en/fixtures/navbar`
+- **THEN** o footer partilhado não inclui a faixa de contacto direto
+
+#### Scenario: Ida e volta
+
+- **WHEN** um visitante navega por clique `/pt` → `/pt/get-quote` → `/pt`
+- **THEN** a faixa aparece só enquanto está em `/pt/get-quote`
+
+#### Scenario: Recarga na home depois da navegação
+
+- **WHEN** um visitante recarrega `/en` depois de ter vindo de `/en/get-quote`
+- **THEN** o footer não inclui a faixa e a página responde 200

@@ -35,6 +35,13 @@ const BASE: FooterContent = {
       links: [
         { key: "k1", name: "Home", href: "/", isExternal: false },
         { key: "k2", name: "Services", href: "/#services", isExternal: false },
+        { key: "k4", name: "Products", href: "/products", isExternal: false },
+        {
+          key: "k5",
+          name: "Ficha Segura",
+          href: "/products/ficha-segura",
+          isExternal: false,
+        },
         {
           key: "k3",
           name: "Kitenda",

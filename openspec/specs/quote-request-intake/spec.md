@@ -12,13 +12,13 @@ _Introduzida por `add-get-quote-page`, sincronizada ao arquivar._
 
 SHALL existir uma coleção `quote-requests` que guarda cada submissão do formulário com: nome, e-mail, serviços de interesse, mensagem, o locale de origem da submissão, e a data de criação.
 
-A submissão SHALL ser processada por uma Server Action em `src/app/(app)/[locale]/get-quote/actions.ts` que grava via `payload.create`, obtendo o Payload por `getPayloadInstance()`. SHALL NOT ser criado um route handler sob `(payload)/api`.
+A submissão SHALL ser processada por uma Server Action em `src/app/(app)/[locale]/get-quote/actions.ts`, que grava através de `createQuoteRequest` do módulo de conteúdo (`@/content`). A Server Action SHALL NOT importar o cliente do CMS. SHALL NOT ser criado um route handler público para a submissão.
 
 #### Scenario: Submissão completa
 
 - **WHEN** um visitante em `/pt/get-quote` submete nome, e-mail válido, dois interesses e uma mensagem
 - **THEN** existe um documento novo em `quote-requests` com esses valores e `locale` igual a `pt`
-- **AND** o documento é visível na listagem de `/admin`
+- **AND** o documento é visível na interface de administração do CMS
 
 #### Scenario: Submissão sem interesses
 
@@ -45,24 +45,39 @@ A relação serve a navegação no admin; o slug copiado serve a leitura da subm
 
 ### Requirement: A coleção de submissões não é legível publicamente
 
-O access control de `quote-requests` SHALL permitir `create` a qualquer visitante e SHALL exigir utilizador autenticado para `read`, `update` e `delete`.
+As submissões SHALL ser registos de `form_submissions` do formulário `quote_request` do site no hcms, e SHALL exigir credenciais para qualquer operação. O papel público SHALL NOT ter acesso a `form_submissions`, o token de formulário do site SHALL ter apenas `create`, e o token de leitura do site SHALL NOT as ler. A única via de escrita anónima SHALL ser a Server Action e as guardas dela (honeypot, tempo mínimo, zod, formulário ativo).
 
-Este requisito é explícito porque as restantes coleções e globals deste repo usam `read: () => true` — são conteúdo de marketing — e replicar esse padrão aqui expõe nome, e-mail e descrição de projeto de terceiros na API REST.
+Este requisito é explícito porque as submissões guardam nome, e-mail e descrição de projeto de terceiros, ao contrário do restante conteúdo, que é de marketing.
 
 #### Scenario: Leitura anónima da API
 
-- **WHEN** um pedido não autenticado é feito a `/api/quote-requests`
-- **THEN** a resposta não contém nenhuma submissão
+- **WHEN** um pedido não autenticado faz `GET /items/form_submissions` ao hcms
+- **THEN** o pedido é recusado
 
-#### Scenario: Leitura autenticada
+#### Scenario: Leitura por editor
 
-- **WHEN** um utilizador autenticado abre a coleção em `/admin`
+- **WHEN** um editor autenticado abre as submissões do formulário `quote_request` no app do hcms
 - **THEN** vê as submissões gravadas
 
-#### Scenario: Escrita anónima permitida
+#### Scenario: Escrita anónima pela API recusada
 
-- **WHEN** um visitante não autenticado submete o formulário
-- **THEN** a criação é aceite
+- **WHEN** um pedido não autenticado faz `POST /items/form_submissions` ao hcms
+- **THEN** o pedido é recusado e nenhuma submissão é gravada
+
+#### Scenario: Escrita anónima pelo formulário aceite
+
+- **WHEN** um visitante não autenticado submete o formulário de `/get-quote` com dados válidos e o formulário ativo
+- **THEN** a submissão é gravada em `form_submissions`
+
+#### Scenario: O token de leitura do site não lê submissões
+
+- **WHEN** o token de leitura do site faz `GET /items/form_submissions`
+- **THEN** o pedido é recusado
+
+#### Scenario: Formulário desligado não é contornável pela API
+
+- **WHEN** o formulário está desligado e um pedido anónimo faz `POST /items/form_submissions`
+- **THEN** nenhuma submissão é gravada
 
 ### Requirement: Validação com zod, autoridade no servidor
 
@@ -155,3 +170,45 @@ A flag é a válvula de fecho da única escrita pública do site, e por isso tem
 
 - **WHEN** a Server Action é invocada enquanto a flag está desligada
 - **THEN** nenhum documento é criado
+
+### Requirement: A empresa é gravada quando o formulário a declara
+
+Quando o formulário `quote_request` do hcms declarar o campo `company`, a Server Action SHALL aceitar um valor opcional de empresa, validado pelo schema zod partilhado (texto, aparado, com limite máximo de comprimento), e o provider SHALL gravá-lo em `data.company` da `form_submissions`. Um valor vazio SHALL ser gravado como ausente, e não como string vazia.
+
+Quando o formulário não declarar o campo, a action SHALL ignorar qualquer valor de empresa recebido, e o provider SHALL NOT enviar `data.company`.
+
+#### Scenario: Empresa preenchida
+
+- **WHEN** um visitante submete nome, e-mail, mensagem e empresa "Acme", com o campo declarado no hcms
+- **THEN** a submissão é gravada com `data.company` igual a "Acme"
+
+#### Scenario: Empresa vazia
+
+- **WHEN** a submissão é válida e a empresa vem vazia
+- **THEN** a submissão é aceite e `data` não contém `company`
+
+#### Scenario: Empresa forjada sem o campo no hcms
+
+- **WHEN** a action recebe um valor de empresa e o formulário do hcms não declara o campo
+- **THEN** a submissão é gravada sem `data.company`
+
+#### Scenario: Empresa acima do limite
+
+- **WHEN** a empresa excede o comprimento máximo do schema
+- **THEN** a submissão é rejeitada, com o erro associado ao campo da empresa e a mensagem de piso `tooLong` do CMS
+
+### Requirement: O estado de sucesso permite um novo envio
+
+Depois de uma submissão bem-sucedida, o cartão do formulário SHALL dar lugar a uma confirmação com `role="status"`: um ícone, a mensagem de sucesso do CMS como título, o subtítulo "We'll reply within one business day." (cópia de UI localizada) e um botão `outline` "Send another" / "Enviar outro". O botão SHALL repor o formulário vazio, com os chips desligados, e devolver o foco ao primeiro campo.
+
+O mesmo estado SHALL aparecer quando o honeypot está preenchido, como exige "Guardas de spam sem dependência externa".
+
+#### Scenario: Confirmação anunciada
+
+- **WHEN** a gravação conclui com êxito
+- **THEN** a confirmação substitui o formulário e um leitor de ecrã anuncia a mensagem de sucesso
+
+#### Scenario: Enviar outro
+
+- **WHEN** o visitante carrega em "Send another"
+- **THEN** o formulário volta vazio, sem chips selecionados, e o foco está no campo do nome

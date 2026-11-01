@@ -10,21 +10,21 @@ _Introduzida por `add-get-quote-page`, sincronizada ao arquivar._
 
 ### Requirement: A rota `/get-quote` renderiza conteúdo vindo da global
 
-A rota `/[locale]/get-quote` SHALL obter o seu conteúdo da global `GetQuotePage` do Payload (slug `get-quote-page`) através de um fetcher em `src/service/payload-functions.ts`, com `depth: 2` e o `locale` do segmento de rota, e SHALL deixar de renderizar o stub atual.
+A rota `/[locale]/get-quote` SHALL obter o seu conteúdo da global da página de orçamento através de `getQuotePage(locale)` do módulo de conteúdo (`@/content`), com o `locale` do segmento de rota, e com os serviços de interesse já populados.
 
-O slug SHALL estar registado em `GLOBAL_SLUGS` ([`src/service/constants.ts`](../../../../src/service/constants.ts)) para que fetcher e configuração da global não possam divergir, e o fetcher SHALL reusar o `getGlobal` genérico já existente.
+A rota SHALL NOT conhecer o CMS que serve a global: nem o slug interno, nem a profundidade de população, nem a instância do cliente do CMS.
 
 #### Scenario: Página com a global preenchida
 
-- **WHEN** um visitante abre `/en/get-quote` com a global `get-quote-page` preenchida
+- **WHEN** um visitante abre `/en/get-quote` com a global da página de orçamento preenchida
 - **THEN** o headline, o parágrafo de introdução, a pill de disponibilidade, o eyebrow, os rótulos do formulário, o rótulo do botão e a nota de privacidade apresentados são os valores gravados na global
 - **AND** nenhum desses textos aparece escrito diretamente no JSX do componente
 
-#### Scenario: Fetcher reusa a instância memoizada
+#### Scenario: A rota usa só o módulo de conteúdo
 
-- **WHEN** o fetcher da global é executado
-- **THEN** obtém o Payload através de `getPayloadInstance()` de [`src/service/index.ts`](../../../../src/service/index.ts)
-- **AND** não chama `getPayload({ config })` diretamente
+- **WHEN** se inspeciona `get-quote/page.tsx` e os componentes de `GetQuote`
+- **THEN** o único import de conteúdo é `@/content`
+- **AND** não há imports de `payload`, `@payloadcms/*` nem `payload-types.ts`
 
 ### Requirement: Cada campo visível tem um piso em código
 
@@ -72,22 +72,6 @@ O rótulo de cada chip SHALL ser o `title` do serviço (localizado) e a identida
 - **WHEN** o `title` de um serviço é alterado no admin
 - **THEN** o rótulo do chip acompanha a alteração
 - **AND** a identidade usada para submeter aquele interesse continua a ser o `slug`, inalterada
-
-### Requirement: A pill de disponibilidade é opcional e controlada pelo CMS
-
-A pill de disponibilidade (o ponto, o texto de estado e a localidade) SHALL ser um grupo na global com uma flag de ativação, e SHALL ser omitida por completo quando a flag estiver desligada.
-
-#### Scenario: Pill desativada
-
-- **WHEN** a flag de ativação da pill está desligada
-- **THEN** a pill não é renderizada
-- **AND** não fica um espaço vazio no lugar dela que altere o alinhamento das secções vizinhas
-
-#### Scenario: Pill ativa sem localidade
-
-- **WHEN** a pill está ativa, com texto de estado preenchido e a localidade vazia
-- **THEN** a pill apresenta apenas o ponto e o texto de estado
-- **AND** o separador que precede a localidade não é renderizado
 
 ### Requirement: Todo o conteúdo visível é localizado
 
@@ -156,3 +140,60 @@ A rota SHALL chamar `notFound()` a menos que `NODE_ENV === "development"`, e ess
 - **WHEN** a rota é aberta no dev server
 - **THEN** apresenta os casos degradados fabricados, cada um identificado
 - **AND** cada caso difere do caso completo apenas no campo que degrada
+
+### Requirement: Layout v3 da página de orçamento
+
+A página SHALL seguir o artboard `openspec/design/v3 · Get Quote (EN)-html/GetQuote.dc.html`: um `PageHeader` com o eyebrow, o headline (Gilroy, 64px a desktop, 52px abaixo de 1024px, 38px abaixo de 768px) e a introdução, e por baixo uma grelha com o cartão do formulário e o aside de contacto (`quote-contact-aside`). Os breakpoints e os valores visuais são os do mockup.
+
+Inputs: 52px de altura, contorno de 1,5px `#edeef0`, raio 12px; `#d4d7da` em hover; contorno `#212528` com anel de 4px em foco. A textarea tem no mínimo 168px e redimensiona na vertical. Os chips de interesse são `<button aria-pressed>`, com o ícone a rodar 45° quando ligados e contorno `#212528` em hover.
+
+#### Scenario: Desktop
+
+- **WHEN** `/en/get-quote` é vista a 1440px
+- **THEN** o cabeçalho, o cartão do formulário e o aside coincidem com o artboard
+
+#### Scenario: Chips por teclado
+
+- **WHEN** o visitante usa Tab até um chip e carrega em Espaço
+- **THEN** o chip passa a `aria-pressed="true"` e o interesse é incluído na submissão
+
+### Requirement: Mapeamento dos textos no layout v3
+
+- O eyebrow do formulário (`form.eyebrow`) SHALL passar a ser o eyebrow do `PageHeader`, com piso "Get a Quote" / "Pedir orçamento".
+- O `PageHeader` SHALL terminar na introdução, sem a pill de disponibilidade, como no artboard.
+- O título do cartão ("Tell us about your project") e o subtítulo ("A few details are enough to get started.") SHALL ser cópia de UI localizada, porque o formulário do hcms não tem esses campos.
+- O piso do rótulo da mensagem SHALL passar a "Your project" / "O seu projecto", e o placeholder da textarea ("Goals, timeline, budget range — anything that helps us understand it.") SHALL ser cópia de UI localizada.
+
+Os restantes rótulos, o botão, a nota de privacidade e as mensagens continuam a vir do CMS, com os pisos existentes.
+
+#### Scenario: Eyebrow authorado
+
+- **WHEN** o formulário do hcms tem eyebrow "Start here" em `en`
+- **THEN** o `PageHeader` de `/en/get-quote` mostra "Start here"
+
+#### Scenario: Nenhuma string em inglês em /pt
+
+- **WHEN** `/pt/get-quote` é servido com o CMS vazio
+- **THEN** todo o texto do ecrã, incluindo a cópia de UI nova e o placeholder, está em português
+
+#### Scenario: Cabeçalho sem pill
+
+- **WHEN** `/en/get-quote` é servida e o bloco de hero da página `contact` no hcms ainda tem `highlights`
+- **THEN** o `PageHeader` mostra o eyebrow, o headline e a introdução, e nada por baixo
+- **AND** o cartão do formulário começa à mesma distância da introdução que no artboard
+
+### Requirement: O campo de empresa depende do formulário do hcms
+
+O campo "Company (optional)" SHALL renderizar só quando o formulário `quote_request` do hcms declarar um campo com `name = "company"`. A label SHALL vir da tradução desse campo, com piso "Company" / "Empresa", seguida de "(optional)" / "(opcional)" como cópia de UI. O input SHALL usar `autocomplete="organization"` e SHALL NOT ser obrigatório.
+
+Sem o campo no hcms, a grelha de dados pessoais SHALL mostrar só nome e e-mail, sem célula vazia.
+
+#### Scenario: Campo declarado no hcms
+
+- **WHEN** o formulário do hcms tem um campo `company`
+- **THEN** a página mostra o input de empresa ao lado do e-mail
+
+#### Scenario: Campo ausente no hcms
+
+- **WHEN** o formulário do hcms não tem um campo `company`
+- **THEN** a página não mostra o input de empresa e o formulário continua a submeter

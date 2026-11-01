@@ -85,6 +85,14 @@ function isRoutedHref(href: string): boolean {
   return href.startsWith("/");
 }
 
+// A página de detalhe de um produto: `/products/<slug>`, um só segmento, com
+// `/` final, query ou hash opcionais. A listagem `/products` fica de fora. É a
+// rota que decide, e não um campo do hcms: o `variant` dos itens de navegação
+// é um dropdown fechado, e este repo não muda o schema.
+function isProductDetailHref(href: string): boolean {
+  return /^\/products\/[^/?#]+\/?(?:[?#].*)?$/.test(href);
+}
+
 // O prefixo é montado à mão, e isso é deliberado — a alternativa idiomática
 // custa caro. Tanto o `Link` quanto o `getPathname` de `@/i18n/navigation`
 // arrastam o runtime de cliente do next-intl (o parser ICU do `@formatjs`,
@@ -319,8 +327,12 @@ export default function Footer({
                     >
                       <RollText>{link.name}</RollText>
                       {/* Decoração: o nome acessível do link é o rótulo
-                          authorado, sem sufixo vindo da seta. */}
-                      {link.isExternal && <ExternalArrow />}
+                          authorado, sem sufixo vindo da seta. Os produtos
+                          também a levam, como no canvas do v3, mas continuam
+                          internos: `FooterHref` só olha para `external`. */}
+                      {(link.isExternal || isProductDetailHref(link.href)) && (
+                        <ExternalArrow />
+                      )}
                     </FooterHref>
                   </li>
                 ))}
