@@ -81,6 +81,11 @@ type SwapInvert = {
    * mas tem de ser escrita.
    */
   shine: string;
+  /**
+   * Tom do cursor SOBRE O PAINEL, o contrário da cor de `fill`. O de repouso
+   * (`CURSOR_TONE`) deixava o disco da cor do painel que acabou de subir.
+   */
+  cursor: "light" | "dark";
 };
 
 // Com `Record<string, …>` a promessa acima era falsa: uma chave em falta
@@ -90,8 +95,9 @@ type Variant = NonNullable<VariantProps<typeof buttonVariants>["variant"]>;
 
 const SHINE_PALETTE = ["#5B8DEF", "#9B5BEF", "#EF5B8D", "#5BD1EF", "#5B8DEF"];
 
-// O tom do cursor sobre o botão: claro sobre os botões escuros, escuro sobre os
-// claros. Lido pelo `Cursor` por `data-cursor-tone`.
+// O tom do cursor sobre o botão EM REPOUSO: claro sobre os botões escuros,
+// escuro sobre os claros. Lido pelo `Cursor` por `data-cursor-tone`. Com
+// `textSwap` o botão inverte no hover e o tom vem de `swapInvert[v].cursor`.
 const CURSOR_TONE: Record<Variant, "light" | "dark"> = {
   primary: "light",
   outline: "dark",
@@ -192,6 +198,7 @@ export default function Button(props: ButtonProps) {
       rim: "",
       // Painel claro: o anel precisa de escurecer.
       shine: shineDim,
+      cursor: "dark",
     },
     outline: {
       text: "hover:text-white!",
@@ -206,6 +213,7 @@ export default function Button(props: ButtonProps) {
       // Vazio é a declaração de "não precisa", e está escrita de propósito —
       // omiti-la faria a variante falhar a compilação, que é o ponto.
       shine: "",
+      cursor: "light",
     },
     inverted: {
       text: "hover:text-white!",
@@ -218,6 +226,7 @@ export default function Button(props: ButtonProps) {
       rim: "",
       // Painel escuro, como `outline`.
       shine: "",
+      cursor: "light",
     },
     "outline-inverted": {
       text: "hover:text-primary!",
@@ -227,6 +236,7 @@ export default function Button(props: ButtonProps) {
       rim: "hover:border-white!",
       // Painel claro, como `primary`.
       shine: shineDim,
+      cursor: "dark",
     },
     pill: {
       text: "hover:text-white!",
@@ -239,12 +249,30 @@ export default function Button(props: ButtonProps) {
       rim: "hover:border-primary!",
       // Painel escuro, como `outline`.
       shine: "",
+      cursor: "light",
     },
     // `link` e `icon` não usam `textSwap` hoje. As entradas existem porque a
     // tabela é exaustiva: vazias, o painel fica transparente e só o rótulo
     // rola — sem inversão, porque não há fundo para inverter contra.
-    link: { text: "", fill: "", disc: "", icon: "", rim: "", shine: "" },
-    icon: { text: "", fill: "", disc: "", icon: "", rim: "", shine: "" },
+    // Sem painel, o cursor fica com o tom de repouso.
+    link: {
+      text: "",
+      fill: "",
+      disc: "",
+      icon: "",
+      rim: "",
+      shine: "",
+      cursor: CURSOR_TONE.link,
+    },
+    icon: {
+      text: "",
+      fill: "",
+      disc: "",
+      icon: "",
+      rim: "",
+      shine: "",
+      cursor: CURSOR_TONE.icon,
+    },
   };
   const invert = swap ? swapInvert[variant ?? "primary"] : undefined;
 
@@ -332,7 +360,7 @@ export default function Button(props: ButtonProps) {
   return (
     <Comp
       data-cursor="button"
-      data-cursor-tone={CURSOR_TONE[variant ?? "primary"]}
+      data-cursor-tone={invert?.cursor ?? CURSOR_TONE[variant ?? "primary"]}
       data-disc={disc && swap ? "" : undefined}
       className={cn(
         buttonVariants({ variant, size }),

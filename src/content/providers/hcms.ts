@@ -410,7 +410,9 @@ const BLOCK_FIELDS = [
   ...fileFields("blocks.item:block_hero.image"),
   "blocks.item:block_media_text.translations.*",
   ...fileFields("blocks.item:block_media_text.media"),
+  ...fileFields("blocks.item:block_media_text.image"),
   "blocks.item:block_collection.source",
+  "blocks.item:block_collection.featured_only",
   "blocks.item:block_collection.translations.*",
   "blocks.item:block_form.translations.*",
   "blocks.item:block_contact.translations.*",
@@ -836,6 +838,7 @@ const project = z.object({
   slug: z.string().nullable(),
   category: z.string().nullable(),
   tags: z.array(z.string()),
+  featured: z.boolean(),
 });
 
 const testimonial = z.object({
@@ -891,6 +894,7 @@ const toTestimonialSocial = (value: unknown): TestimonialSocial =>
 const PROJECT_FIELDS = [
   "url",
   "tags",
+  "is_featured",
   "category.translations.*",
   ...fileFields("image"),
 ];
@@ -900,6 +904,8 @@ const PROJECT_FIELDS = [
 // não existe, e as outras leituras não precisam deles.
 const PRODUCT_FIELDS = [
   ...PROJECT_FIELDS,
+  // `paradis-v3-cms-gaps` no template; o `cms:check` exige-o.
+  "short_name",
   "gallery.sort",
   ...fileFields("gallery.directus_files_id"),
   "testimonial.id",
@@ -936,6 +942,7 @@ function toProjects(
       tags: Array.isArray(record.tags)
         ? record.tags.filter((tag): tag is string => typeof tag === "string")
         : [],
+      featured: record.is_featured === true,
     })),
     where,
     path,
@@ -1009,6 +1016,7 @@ export async function getHomepage(locale: Locale): Promise<Homepage> {
         title: tr(gridItem, "title", language),
         description: tr(gridItem, "lead", language),
         backgroundVideo: aboutItem?.media ?? null,
+        backgroundPoster: aboutItem?.image ?? null,
       },
       primaryCta: cta(aboutItem, 0, language, slugs),
       items: services,
@@ -1018,7 +1026,11 @@ export async function getHomepage(locale: Locale): Promise<Homepage> {
       title: tr(productsItem, "title", language),
       subtitle: tr(productsItem, "lead", language),
       primaryCta: cta(productsItem, 0, language, slugs),
-      items: toProjects(projects, where, "projects.items"),
+      // Com `featured_only` no bloco, a home mostra só os destacados; a listagem
+      // e o "Next product" mostram sempre todos.
+      items: toProjects(projects, where, "projects.items").filter(
+        (project) => productsItem?.featured_only !== true || project.featured,
+      ),
     },
     testimonials: {
       enabled: testimonialsBlock.enabled,
@@ -1112,7 +1124,7 @@ const productStep = z.object({
   body: z.string().nullable(),
 });
 
-// O detalhe de `/products/<slug>` e os outros projectos, para "More Products".
+// O detalhe de `/products/<slug>` e o projecto seguinte, para "Next product".
 // Uma só leitura dos projectos (são poucos) serve as duas coisas. `null` quando
 // nenhum projecto publicado tem aquele slug: a rota responde 404.
 export async function getProduct(
@@ -1152,6 +1164,9 @@ export async function getProduct(
   return {
     product: {
       ...projects[index],
+      shortName: asString(record.short_name)?.trim() || null,
+      // Vem por `translations.*`: um hcms sem o campo dá `null`, sem erro.
+      lead: tr(record, "lead", language),
       market: tr(record, "market", language),
       platform: tr(record, "platform", language),
       challenge: tr(record, "challenge", language),
@@ -1171,7 +1186,7 @@ export async function getProduct(
       gallery,
       testimonial: (testimonials[0] as Testimonial | undefined) ?? null,
     },
-    others: projects.filter((_, position) => position !== index),
+    next: projects.length > 1 ? projects[(index + 1) % projects.length] : null,
   };
 }
 
@@ -1239,8 +1254,6 @@ export async function getQuotePage(locale: Locale): Promise<QuotePage> {
     return null;
   };
 
-  const highlights = trList(block, "highlights", language);
-
   return {
     seo: {
       metaTitle: tr(contact, "seo_title", language),
@@ -1249,11 +1262,6 @@ export async function getQuotePage(locale: Locale): Promise<QuotePage> {
     hero: {
       headline: tr(block, "title", language),
       intro: tr(block, "lead", language),
-    },
-    availability: {
-      enabled: highlights.length > 0,
-      label: trEntry(block, "highlights", 0, "text", language),
-      location: trEntry(block, "highlights", 1, "text", language),
     },
     form: {
       enabled: form.is_active !== false && formBlock.enabled,
@@ -1268,6 +1276,9 @@ export async function getQuotePage(locale: Locale): Promise<QuotePage> {
       messageLabel: tr(field("message"), "label", language),
       submitLabel: tr(form, "submit_label", language),
       privacyNote: tr(form, "privacy_note", language),
+      messagePlaceholder: tr(field("message"), "placeholder", language),
+      successTitle: tr(form, "success_title", language),
+      successAgainLabel: tr(form, "success_again_label", language),
       messages: {
         success: tr(form, "success_message", language),
         error: tr(form, "error_message", language),

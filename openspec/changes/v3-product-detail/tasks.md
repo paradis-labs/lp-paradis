@@ -18,5 +18,5 @@
 ## 4. Verificação
 
 - [x] 4.1 `/en/products/kitenda`, `/pt/products/ficha-segura` e `/en/products/nao-existe` (404)
-- [ ] 4.2 Comparar com o artboard em desktop e a 390px
+- [x] 4.2 Comparar com o artboard em desktop e a 390px (as diferenças encontradas são a change `v3-product-detail-match-design`)
 - [x] 4.3 `npm run lint` e `npm run build`

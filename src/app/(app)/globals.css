@@ -93,6 +93,9 @@
   --cloud: #f6f7f8;
   --snow: #fafafa;
   --haze: #d4d7da;
+  /* O fundo por trás das capas de produto (home, listagem, detalhe). Não é
+     `cover` porque `bg-cover` já é o `background-size` do Tailwind. */
+  --cover-ground: #5a5b5d;
 }
 
 .dark {
@@ -220,6 +223,7 @@
   --color-cloud: var(--cloud);
   --color-snow: var(--snow);
   --color-haze: var(--haze);
+  --color-cover-ground: var(--cover-ground);
 
   /*
    * As quatro curvas do v3, como utilitários `ease-*`. Cada uma tem um papel
@@ -317,6 +321,21 @@
   max-width: 80rem; /* 1280px */
 }
 
+/*
+ * A margem lateral das superfícies claras, a `.pad-x` do v3: 24px abaixo de
+ * 1280px, 20px abaixo de 768px, e nenhuma a partir de 1280px, onde o
+ * `container` centra o conteúdo. O painel escuro da home tem a sua própria.
+ */
+@utility gutter {
+  padding-inline: 1.5rem;
+  @media (width < 48rem) {
+    padding-inline: 1.25rem;
+  }
+  @media (width >= 80rem) {
+    padding-inline: 0;
+  }
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -324,6 +343,13 @@
   body {
     @apply bg-background text-foreground;
     letter-spacing: var(--tracking-normal);
+  }
+
+  /* O negrito do texto rico (FAQ, em Markdown) na face 600 que a Inter
+     carrega: o 700 por omissão do browser seria sintetizado. */
+  strong,
+  b {
+    font-weight: 600;
   }
 
   /* Rolagem suave nativa para links âncora (respeita reduced-motion). */
@@ -745,6 +771,11 @@ html.reveal-failsafe [data-reveal] {
  *
  * Nenhum antepassado pode ter `overflow: hidden`: faz dele um scroll container
  * que não rola, e o `view-timeline` fica preso. Para recortar, `overflow-clip`.
+ *
+ * `data-mode="enter"` é o texto acima da dobra (o lead do `PageHeader`): as
+ * letras acendem uma vez ao carregar, a letra `i` com o atraso
+ * `--lit-delay + --lit-span · i/n`. É uma animação normal, por isso fica fora
+ * do `@supports` e anima também no Firefox.
  */
 .lit {
   display: block;
@@ -752,13 +783,25 @@ html.reveal-failsafe [data-reveal] {
   --span: calc(100% - 50vh);
 }
 
+@media (prefers-reduced-motion: no-preference) {
+  .lit[data-mode="enter"] .lit-c {
+    animation: lit-in 0.5s linear both;
+    animation-delay: calc(
+      var(--lit-delay) +
+      var(--lit-span) *
+      var(--i) /
+      var(--n)
+    );
+  }
+}
+
 @supports (animation-timeline: view()) {
   @media (prefers-reduced-motion: no-preference) {
-    .lit {
+    .lit[data-mode="scroll"] {
       view-timeline-name: --lit;
     }
 
-    .lit-c {
+    .lit[data-mode="scroll"] .lit-c {
       animation: lit-in linear both;
       animation-timeline: --lit;
       animation-range-start: cover
@@ -956,12 +999,25 @@ html.reveal-failsafe [data-reveal] {
   opacity: 0.16;
 }
 
+/*
+ * Sobre um botão a cor muda ao ritmo do painel que sobe (500ms, `ease-fill`),
+ * como o disco do `circleIcon`. A transição é a do estado de destino, por isso
+ * só a entrada fica lenta; a saída volta aos 0,25s.
+ */
 .cursor-dot[data-mode="button"]::before {
   transform: scale(0.4);
+  /* Translúcido: o rótulo do botão vê-se através do disco. */
+  opacity: 0.6;
+  transition:
+    transform 0.55s var(--ease-soft),
+    opacity 0.35s,
+    background-color 0.5s var(--ease-fill);
 }
 
+/* A capa nota-se através do disco; o rótulo é outro elemento e fica opaco. */
 .cursor-dot[data-mode="text"]::before {
   transform: scale(1);
+  opacity: 0.85;
 }
 
 .cursor-dot-label {

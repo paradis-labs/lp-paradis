@@ -62,12 +62,9 @@ export default function Cursor() {
       if (!frame) frame = requestAnimationFrame(tick);
     };
 
-    // `mouseover` só dispara ao atravessar a fronteira de um elemento, por
-    // isso o `closest()` corre ao mudar de alvo e não a cada pixel.
-    const onOver = (event: MouseEvent) => {
-      const target = event.target;
-      if (!(target instanceof Element)) return;
+    let lastTarget: Element | null = null;
 
+    const resolve = (target: Element) => {
       const textHost = target.closest<HTMLElement>("[data-cursor-text]");
       const mode: Mode = textHost
         ? "text"
@@ -85,6 +82,24 @@ export default function Cursor() {
       label.textContent = textHost?.dataset.cursorText ?? "";
     };
 
+    // `mouseover` só dispara ao atravessar a fronteira de um elemento, por
+    // isso o `closest()` corre ao mudar de alvo e não a cada pixel.
+    const onOver = (event: MouseEvent) => {
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+      lastTarget = target;
+      resolve(target);
+    };
+
+    // Um clique pode mudar o tom sem o ponteiro sair (uma pill que fica
+    // seleccionada), e o `mouseover` não volta a disparar. Relê no frame
+    // seguinte, já com o render do React aplicado. Um rAF só, sem reagendar.
+    const onClick = () => {
+      requestAnimationFrame(() => {
+        if (lastTarget?.isConnected) resolve(lastTarget);
+      });
+    };
+
     const onLeave = () => {
       shown = false;
       dot.removeAttribute("data-on");
@@ -92,12 +107,14 @@ export default function Cursor() {
 
     document.addEventListener("mousemove", onMove, { passive: true });
     document.addEventListener("mouseover", onOver, { passive: true });
+    document.addEventListener("click", onClick, { passive: true });
     document.documentElement.addEventListener("mouseleave", onLeave);
 
     return () => {
       if (frame) cancelAnimationFrame(frame);
       document.removeEventListener("mousemove", onMove);
       document.removeEventListener("mouseover", onOver);
+      document.removeEventListener("click", onClick);
       document.documentElement.removeEventListener("mouseleave", onLeave);
     };
   }, []);

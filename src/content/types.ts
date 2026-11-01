@@ -174,6 +174,8 @@ export type Project = {
   /** O nome da categoria no locale pedido ("Fintech · Prepaid cards"). */
   category: string | null;
   tags: string[];
+  /** `is_featured`: entra na home quando o bloco `#products` pede só os destacados. */
+  featured: boolean;
 };
 
 export type TestimonialSocial =
@@ -220,6 +222,8 @@ export type Homepage = {
       title: string | null;
       description: string | null;
       backgroundVideo: Media | null;
+      /** O `poster` do vídeo: a imagem do mesmo bloco (`#about-us`). */
+      backgroundPoster: Media | null;
     };
     primaryCta: Cta;
   };
@@ -244,6 +248,9 @@ export type ProductsPage = {
 // ── Detalhe de produto ─────────────────────────────────────────────────────
 
 /** Os ícones dos cartões de características: o `select` `steps[].icon` do hcms. */
+// A ordem e os nomes são o contrato com o `select('icon')` dos `steps` no
+// schema do template (`v3-cms-gaps`, D4). Um valor que o hcms mande fora
+// desta lista dá um passo sem ícone.
 export const PRODUCT_ICONS = [
   "swap",
   "trend",
@@ -251,6 +258,14 @@ export const PRODUCT_ICONS = [
   "calculator",
   "globe",
   "clock",
+  "chart",
+  "heart",
+  "calendar",
+  "filter",
+  "bank",
+  "chat",
+  "leaf",
+  "bag",
 ] as const;
 
 export type ProductIcon = (typeof PRODUCT_ICONS)[number];
@@ -267,6 +282,10 @@ export type ProductStep = {
  * projecto sem eles é uma página com cabeçalho, capa e ficha.
  */
 export type ProductDetail = Project & {
+  /** O nome de marca curto dos rótulos ("Visit Génesis"); `null` usa o título. */
+  shortName: string | null;
+  /** O texto do cabeçalho do detalhe; `null` usa o `description` (o do cartão). */
+  lead: string | null;
   market: string | null;
   platform: string | null;
   challenge: string | null;
@@ -279,8 +298,11 @@ export type ProductDetail = Project & {
 
 export type ProductPage = {
   product: ProductDetail;
-  /** Os outros projectos do site, para "More Products". */
-  others: Project[];
+  /**
+   * O projecto seguinte na ordem da listagem, para "Next product": depois do
+   * último vem o primeiro. `null` quando o site só tem este projecto.
+   */
+  next: Project | null;
 };
 
 // ── Página de orçamento ────────────────────────────────────────────────────
@@ -288,12 +310,6 @@ export type ProductPage = {
 export type QuotePage = {
   seo: { metaTitle: string | null; metaDescription: string | null };
   hero: { headline: string | null; intro: string | null };
-  availability: {
-    /** Só `false` explícito no CMS desliga a pill. */
-    enabled: boolean;
-    label: string | null;
-    location: string | null;
-  };
   form: {
     /** Só `false` explícito no CMS desliga o formulário. */
     enabled: boolean;
@@ -311,6 +327,12 @@ export type QuotePage = {
     messageLabel: string | null;
     submitLabel: string | null;
     privacyNote: string | null;
+    /** O placeholder da área de texto (`placeholder` do campo `message`). */
+    messagePlaceholder: string | null;
+    /** O título do ecrã de sucesso (`success_title`). */
+    successTitle: string | null;
+    /** O botão para enviar outro pedido (`success_again_label`). */
+    successAgainLabel: string | null;
     messages: {
       success: string | null;
       error: string | null;

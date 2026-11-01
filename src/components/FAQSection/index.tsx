@@ -2,6 +2,7 @@ import Reveal from "@/components/Reveal";
 import type { Homepage } from "@/content";
 import type { Locale } from "@/i18n/routing";
 import CallCard from "../CallCard";
+import LitText from "../LitText";
 import {
   Accordion,
   AccordionContent,
@@ -47,12 +48,12 @@ export default function FAQSection({
       <Reveal className="flex max-w-130 flex-col items-center gap-3.5 text-center">
         {title ? (
           <h2 className="font-gilroy text-[26px] leading-[1.2] font-medium tracking-[-0.02em] md:text-[30px] lg:text-4xl">
-            {title}
+            <LitText text={title} />
           </h2>
         ) : null}
         {subtitle ? (
           <p className="text-lg leading-[30px] text-muted-foreground">
-            {subtitle}
+            <LitText text={subtitle} tone="inherit" />
           </p>
         ) : null}
       </Reveal>

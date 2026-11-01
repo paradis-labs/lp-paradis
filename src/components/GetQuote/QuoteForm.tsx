@@ -1,7 +1,7 @@
 "use client";
 
-import { ArrowRightDown } from "@solar-icons/react";
 import { useActionState, useEffect, useRef, useState } from "react";
+import { ArrowDownRight } from "@/components/Glyphs";
 import {
   type QuoteErrorCode,
   type QuoteFormState,
@@ -12,6 +12,7 @@ import {
 } from "@/lib/quote-request";
 import { cn } from "@/lib/utils";
 import Button from "../Button";
+import LitText from "../LitText";
 
 // Restrições de bundle que este módulo cumpre, cada uma por um erro já pago
 // neste repo (ver a capability `get-quote-page`):
@@ -48,7 +49,7 @@ interface QuoteFormProps {
     messagePlaceholder: string;
     submit: string;
     privacyNote: string;
-    successNote: string;
+    successTitle: string;
     sendAnother: string;
   };
   messages: QuoteMessages;
@@ -187,10 +188,10 @@ function QuoteFormRound({
           </svg>
         </span>
         <h2 className="gradient-text font-gilroy text-[32px] leading-[1.1] font-bold tracking-[-0.03em] md:text-[40px]">
-          {messages.success}
+          {labels.successTitle}
         </h2>
         <p className="max-w-115 text-lg leading-[30px] text-muted-foreground">
-          {labels.successNote}
+          {messages.success}
         </p>
         <Button type="button" variant="outline" textSwap onClick={onReset}>
           {labels.sendAnother}
@@ -229,10 +230,18 @@ function QuoteFormRound({
 
       <div className="flex flex-col gap-2">
         <h2 className="font-gilroy text-[26px] leading-[1.15] font-medium tracking-[-0.02em] text-foreground md:text-[32px]">
-          {labels.title}
+          {/* Ao carregar, depois do lead do `PageHeader`, e não com o scroll:
+              no desktop este título já está na dobra e abria meio aceso. */}
+          <LitText text={labels.title} mode="enter" delay={1.4} span={0.6} />
         </h2>
         <p className="text-base leading-[26px] text-[#5b656a]">
-          {labels.subtitle}
+          <LitText
+            text={labels.subtitle}
+            tone="inherit"
+            mode="enter"
+            delay={1.8}
+            span={0.6}
+          />
         </p>
       </div>
 
@@ -308,6 +317,9 @@ function QuoteFormRound({
                   type="button"
                   onClick={() => toggleInterest(interest.slug)}
                   aria-pressed={isSelected}
+                  // Seleccionada, a pill é `bg-primary`: o cursor escuro
+                  // desaparecia nela.
+                  data-cursor-tone={isSelected ? "light" : "dark"}
                   className="group inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full border-[1.5px] border-border bg-white py-2.5 pr-4.5 pl-3.5 text-[15px] leading-5 font-medium text-primary transition-[background-color,color,border-color] duration-350 ease-soft hover:border-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary aria-pressed:border-primary aria-pressed:bg-primary aria-pressed:text-white motion-reduce:transition-none"
                 >
                   <PlusIcon />
@@ -350,7 +362,7 @@ function QuoteFormRound({
           variant="primary"
           size="lg"
           disabled={isPending}
-          trailingIcon={ArrowRightDown}
+          trailingIcon={ArrowDownRight}
           circleIcon
           textSwap
           className="w-full border-2 md:w-auto"

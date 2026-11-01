@@ -3,7 +3,8 @@
 import { ReactLenis, useLenis } from "lenis/react";
 // biome-ignore lint/style/noRestrictedImports: exceção especificada em `hydration-integrity` — com `root` o `ReactLenis` não renderiza DOM, então os dois braços emitem o mesmo markup e não há divergência; converter trocaria o tipo do elemento e remontaria a subárvore inteira. Ver o comentário em `SmoothScroll`.
 import { cancelFrame, frame, useReducedMotion } from "motion/react";
-import { useEffect } from "react";
+import { usePathname } from "next/navigation";
+import { useEffect, useRef } from "react";
 
 // Quantos frames sem scroll antes de o condutor dormir. ~0,5 s a 60 Hz.
 //
@@ -92,6 +93,57 @@ function LenisFrameDriver() {
   return null;
 }
 
+// Leva ao topo cada navegação para outra página.
+//
+// O Next 16 só faz `html.scrollTop = 0` quando o topo do segmento novo está
+// fora do viewport, e escreve-o por scroll nativo. O Lenis só aceita uma
+// posição nativa parado (`onNativeScroll`: `isScrolling === false ||
+// "native"`): clicar num link durante a interpolação da roda deixava-o seguir
+// até ao `targetScroll` antigo, e a página nova abria lá em baixo. Aqui o
+// scroll passa a ser de quem o conduz: `immediate` repõe alvo e posição de uma
+// vez e mata a interpolação; `force` passa por cima do `stop()` do menu mobile,
+// cuja limpeza corre no mesmo commit.
+//
+// Fica de fora o que não é "abrir uma página": a primeira carga (o browser
+// trata), uma URL com hash (o Next faz o `scrollIntoView` do alvo) e o
+// voltar/avançar (o browser restaura a posição). Ver
+// `openspec/changes/fix-scroll-to-top-on-navigation`.
+function ScrollToTopOnNavigate() {
+  const lenis = useLenis();
+  const pathname = usePathname();
+  const lastPathname = useRef(pathname);
+  // O pathname de destino de um `popstate`. O evento dispara antes de o router
+  // do Next atualizar o pathname, por isso a marca já está posta quando o
+  // efeito abaixo corre. Um `popstate` só de hash deixa uma marca igual ao
+  // pathname corrente, que o efeito nunca vê e a navegação seguinte descarta.
+  const historyPathname = useRef<string | null>(null);
+
+  useEffect(() => {
+    const onPopState = () => {
+      historyPathname.current = window.location.pathname;
+    };
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+  }, []);
+
+  useEffect(() => {
+    if (pathname === lastPathname.current) return;
+    lastPathname.current = pathname;
+
+    const fromHistory = historyPathname.current === pathname;
+    historyPathname.current = null;
+    if (fromHistory || window.location.hash) return;
+
+    if (lenis) {
+      lenis.scrollTo(0, { immediate: true, force: true });
+    } else {
+      window.scrollTo({ top: 0, behavior: "instant" });
+    }
+  }, [pathname, lenis]);
+
+  return null;
+}
+
 export default function SmoothScroll({
   children,
 }: {
@@ -105,7 +157,9 @@ export default function SmoothScroll({
   // `LenisContext.Provider` e NENHUM nó de DOM (`lenis-react.mjs`, o ramo
   // `root && root !== "asChild" ? children : <div>…`). Os dois braços deste
   // `if` emitem exatamente o mesmo DOM, então a hidratação casa e a
-  // divergência que esta change eliminou nunca existiu aqui.
+  // divergência que esta change eliminou nunca existiu aqui. O
+  // `ScrollToTopOnNavigate` está nos dois braços, na mesma posição, e devolve
+  // `null`, então não muda isto.
   //
   // Por que converter seria PIOR: o remédio geral é adiar a verdade para
   // depois da montagem. Aqui isso trocaria o tipo do elemento nesta posição —
@@ -122,7 +176,12 @@ export default function SmoothScroll({
 
   // Respect the user's motion preference: fall back to native scroll.
   if (prefersReducedMotion) {
-    return <>{children}</>;
+    return (
+      <>
+        <ScrollToTopOnNavigate />
+        {children}
+      </>
+    );
   }
 
   return (
@@ -132,6 +191,7 @@ export default function SmoothScroll({
       options={{ lerp: 0.1, smoothWheel: true, syncTouch: false }}
     >
       <LenisFrameDriver />
+      <ScrollToTopOnNavigate />
       {children}
     </ReactLenis>
   );

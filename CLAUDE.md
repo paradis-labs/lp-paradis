@@ -50,7 +50,7 @@ Next.js 16 App Router site whose content comes from the **hcms** (`hcms.paradis.
 ## Conventions
 - Path alias: `@/*` → `src/*`.
 - Formatting/linting is **Biome** (`biome.json`), not ESLint/Prettier: 2-space indent, import organization on. Run `npm run lint` before committing.
-- Required env vars (see `.env`): `CMS_URL`, `TOKEN_SECRET_READ` (read-only), `TOKEN_SECRET_FORM` (only `create` on `form_submissions`) and `CMS_REVALIDATE_SECRET`. Without the first three the site refuses to start.
+- Required env vars (see `.env`): `CMS_URL`, `TOKEN_SECRET_READ` (read-only), `TOKEN_SECRET_FORM` (only `create` on `form_submissions`) and `CMS_REVALIDATE_SECRET`. Without the first three the site refuses to start; without `CMS_REVALIDATE_SECRET` it starts with a `[cache]` warning (`src/instrumentation.ts`) and the hcms revalidation is off, so content only refreshes when the 1 h cache expires. Every revalidation request logs a `[cache]` line with its outcome (`cms/hcms/FLOW.md`, "Diagnosticar").
 - **History:** the site ran on Payload CMS until `migrate-cms-to-directus` (phases 0a–5 in `openspec/changes/`). The phase-4 runbook (`cms/CUTOVER.md`) and the migration scripts removed in phase 5 (in git at `c7e1d20`, see `cms/hcms/README.md`) document how it moved.
 
 ## Deployment

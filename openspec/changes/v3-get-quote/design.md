@@ -39,6 +39,13 @@ O `Footer` recebe `ctaBand?: boolean` (por omissão `true`) e deixa de receber `
 ### D6. Cópia de UI nova no componente
 "Tell us about your project", "A few details are enough to get started.", o placeholder da textarea, "(optional)", "Prefer to talk?", "30 minutes, no commitment.", "We'll reply within one business day." e "Send another" vão para o `Record<Locale, …>` do `GetQuote`, ao lado dos pisos atuais. O piso do eyebrow passa de "THE BRIEF" para "Get a Quote", e o de `messageLabel` para "Your project". Os valores authorados no hcms não mudam: se o editor tiver "THE BRIEF", é o que aparece.
 
+### D7. A pill de disponibilidade sai, no código e no conteúdo
+O artboard deixou de desenhar a pill (o CSS `.q-dot` sobrou no export, mas o elemento já não existe). Tirá-la só do conteúdo deixava código morto e um requisito que contradiz o design, por isso sai das duas camadas:
+- **Código:** `QuotePage.availability` sai de `types.ts`, o provider deixa de ler `highlights` do bloco de hero da página `contact`, e o `GetQuote` deixa de montar a pill, o piso `availabilityLabel` e o `after` do `PageHeader`. Se o `after` deixar de ter usos, sai também do `PageHeader`. A fixture perde os casos `availability.*`.
+- **hcms:** limpa-se o conteúdo `highlights` desse bloco no site `paradis`. Este repo não escreve no hcms, por isso a limpeza é feita no seed do `Template-multisite-tenant` (`tooling/seed/paradis.mjs`) e/ou por um editor. O campo `highlights` fica, porque o schema é partilhado.
+- A ordem entre os dois repos não importa: o site deixa de ler o campo, e o conteúdo que lá ficar é ignorado.
+- *Alternativa:* desligar só no hcms (apagar os `highlights`), sem mexer no código. Rejeitada: o requisito e o piso continuariam a prometer uma pill que o design não tem, e um editor podia voltar a ligá-la sem querer.
+
 ## Risks / Trade-offs
 
 - **O campo `company` pode não existir no template** → a página degrada sem ele (especificado). Fica uma tarefa de confirmação e, se faltar, um pedido ao repo do template.

@@ -4,6 +4,7 @@ import type { Locale } from "@/i18n/routing";
 import { textOr } from "@/lib/cms-text";
 import { SOCIAL_ICONS, socialName } from "@/lib/social-platforms";
 import CalendlyCta from "../CalendlyCta";
+import ExternalArrow from "../ExternalArrow";
 import RollText from "../RollText";
 
 // Os dois primeiros são pisos de campos do CMS (`directContact` do footer),
@@ -19,7 +20,7 @@ const COPY: Record<
   }
 > = {
   en: {
-    reachHeading: "Reach Us Directly",
+    reachHeading: "Reach us directly",
     socialHeading: "Elsewhere",
     callHeading: "Prefer to talk?",
     callNote: "30 minutes, no commitment.",
@@ -88,9 +89,7 @@ export default function QuoteContactAside({
             className="inline-flex items-center gap-2 self-start font-gilroy text-[26px] leading-[1.2] font-medium tracking-[-0.01em] break-all text-white"
           >
             <RollText>{address}</RollText>
-            <span className="roll-arrow text-lg" aria-hidden="true">
-              ↗
-            </span>
+            <ExternalArrow className="text-lg" />
           </a>
         </div>
       ),

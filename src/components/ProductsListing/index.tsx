@@ -20,7 +20,7 @@ export default function ProductsListing({
 }) {
   if (items.length === 0) {
     return (
-      <section className="flex w-full justify-center px-3 pt-6 pb-24 md:px-4 xl:px-0">
+      <section className="gutter flex w-full justify-center pt-6 pb-24">
         <p className="w-full max-w-7xl text-lg text-muted-foreground">
           {EMPTY[locale]}
         </p>
@@ -32,7 +32,7 @@ export default function ProductsListing({
     <section className="flex w-full justify-center pt-6 pb-24">
       <Reveal
         group
-        className="grid w-full max-w-7xl grid-cols-1 gap-6 px-3 min-[900px]:grid-cols-2 md:px-4 xl:px-0"
+        className="grid w-full max-w-7xl grid-cols-1 gap-6 gutter min-[900px]:grid-cols-2"
       >
         {items.map((project, index) => (
           <ProductCard

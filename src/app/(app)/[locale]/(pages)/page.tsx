@@ -1,6 +1,6 @@
-import { ArrowRightDown } from "@solar-icons/react";
 import CalendlyCta from "@/components/CalendlyCta";
 import FAQSection from "@/components/FAQSection";
+import { ArrowDownRight } from "@/components/Glyphs";
 import Hero from "@/components/Hero";
 import LitText from "@/components/LitText";
 import MarqueeServices from "@/components/MarqueeServices";
@@ -28,6 +28,7 @@ export default async function Home(props: {
     await getHomepage(locale);
 
   const videoUrl = services.ourServicesCT.backgroundVideo?.url ?? undefined;
+  const posterUrl = services.ourServicesCT.backgroundPoster?.url ?? undefined;
 
   // O cartão "Still have questions?" do FAQ reutiliza o CTA de chamada do hero.
   const callHref = hero.item
@@ -53,10 +54,10 @@ export default async function Home(props: {
         />
       )}
       <div className="flex w-full flex-col items-center pb-11">
-        <section className="container mx-auto flex w-full flex-col gap-5 px-3 py-12 leading-8 md:px-4 xl:px-0">
+        <section className="container mx-auto flex w-full flex-col gap-5 py-12 leading-8">
           <Reveal
             id="about-us"
-            className="relative z-2 flex w-full flex-col gap-7 px-5 py-10 md:px-6 xl:w-149.5 xl:px-0"
+            className="gutter relative z-2 flex w-full flex-col gap-7 py-10 xl:w-149.5"
           >
             <div className="flex flex-col gap-5">
               {services.title && (
@@ -66,7 +67,7 @@ export default async function Home(props: {
               )}
               {services.subtitle && (
                 <p className="text-[19px] leading-[31px] text-muted-foreground">
-                  {services.subtitle}
+                  <LitText text={services.subtitle} tone="inherit" />
                 </p>
               )}
             </div>
@@ -75,7 +76,7 @@ export default async function Home(props: {
                 <CalendlyCta
                   variant="outline"
                   href={localizedCtaHref(services.primaryCta.url, locale)}
-                  trailingIcon={ArrowRightDown}
+                  trailingIcon={ArrowDownRight}
                   circleIcon
                   textSwap
                 >
@@ -89,10 +90,11 @@ export default async function Home(props: {
               grow
               className="video_shape relative hidden h-117.5 w-full overflow-hidden rounded-2xl bg-[radial-gradient(120%_90%_at_70%_30%,#31373d_0%,#212528_45%,#151718_100%)] md:absolute md:top-0 md:right-0 md:block xl:w-149.5"
             >
-              {/* Sem `autoPlay` e com `preload="none"` (P1 da Motion spec):
-                  com `autoPlay` o browser descarregava o MP4 inteiro no load,
-                  com o vídeo abaixo da dobra. Quem o põe a tocar é o
-                  `VideoAutoPause`, quando entra no ecrã. */}
+              {/* Sem `autoPlay`, com `preload="none"` e com `poster` (P1 da
+                  Motion spec): com `autoPlay` o browser descarregava o MP4
+                  inteiro no load, com o vídeo abaixo da dobra. Quem o põe a
+                  tocar é o `VideoAutoPause`, quando entra no ecrã; até lá
+                  mostra a imagem do bloco `#about-us`, ou o gradiente. */}
               <VideoAutoPause>
                 <video
                   className="size-full object-cover"
@@ -100,6 +102,7 @@ export default async function Home(props: {
                   loop
                   playsInline
                   preload="none"
+                  poster={posterUrl}
                 >
                   <source
                     src={videoUrl}

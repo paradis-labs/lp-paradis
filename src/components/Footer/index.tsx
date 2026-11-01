@@ -1,23 +1,23 @@
-import { ArrowRightDown } from "@solar-icons/react";
 import { cacheLife } from "next/cache";
 import Image from "next/image";
 import Link from "next/link";
 import type React from "react";
+import { ArrowDownRight } from "@/components/Glyphs";
 import Reveal from "@/components/Reveal";
 import type { Footer as FooterContent, FooterSocialLink } from "@/content";
 import type { Locale } from "@/i18n/routing";
 import { localizedCtaHref } from "@/lib/locale-href";
 import { SOCIAL_ICONS } from "@/lib/social-platforms";
 import CalendlyCta from "../CalendlyCta";
+import ExternalArrow from "../ExternalArrow";
 import RollText from "../RollText";
 
 type SocialLink = FooterSocialLink;
 
-// O gutter lateral dos três blocos do footer, num só sítio (#21). Cresce até ao
-// `px-14` das secções da home a partir de `lg`; abaixo disso os 56px deixariam
-// ~200px de conteúdo num ecrã de 320px. Em `xl` cai para zero: o `max-width` do
-// `container` (1280px) já afasta o conteúdo das margens.
-const FOOTER_GUTTER = "px-6 sm:px-10 lg:px-14 xl:px-0";
+// O gutter lateral dos três blocos do footer, num só sítio (#21): o `gutter`
+// das superfícies claras do v3 (24px, 20px abaixo de 768px, zero em `xl`, onde
+// o `max-width` do `container` já afasta o conteúdo das margens).
+const FOOTER_GUTTER = "gutter";
 
 // Os literais que antes estavam soltos no JSX. Eles não desaparecem — viram o
 // piso de cada campo, porque a leitura do CMS inverte o risco: antes o texto
@@ -29,7 +29,7 @@ const FOOTER_GUTTER = "px-6 sm:px-10 lg:px-14 xl:px-0";
 // Um piso por idioma, e não um piso só em inglês: o tipo obriga a escrever os
 // dois, e um campo vazio em `/pt` cai em português. As cópias `pt` seguem o
 // texto que os editores puseram no hcms.
-const FALLBACK_LOGO_URL = "/logo-white.svg";
+const FALLBACK_LOGO_URL = "/logo-white.png";
 
 const FALLBACK: Record<
   Locale,
@@ -48,7 +48,7 @@ const FALLBACK: Record<
     ctaHeading: "Ready to build?",
     primaryLabel: "Get Quote - For Free",
     outlineLabel: "Schedule a Call",
-    copyright: "Paradis.Labs - All rights reserved.",
+    copyright: "Paradis Labs - All rights reserved.",
   },
   pt: {
     logoAlt: "Logótipo da Paradis",
@@ -267,7 +267,7 @@ export default function Footer({
                 variant="inverted"
                 size="lg"
                 href={localizedCtaHref(cta?.primaryButton?.href, locale)}
-                trailingIcon={ArrowRightDown}
+                trailingIcon={ArrowDownRight}
                 circleIcon
                 textSwap
               >
@@ -318,13 +318,9 @@ export default function Footer({
                       className="inline-flex items-center gap-1.5 text-white"
                     >
                       <RollText>{link.name}</RollText>
-                      {link.isExternal && (
-                        // Decoração: o nome acessível do link é o rótulo
-                        // authorado, sem sufixo vindo da seta.
-                        <span className="roll-arrow" aria-hidden="true">
-                          ↗
-                        </span>
-                      )}
+                      {/* Decoração: o nome acessível do link é o rótulo
+                          authorado, sem sufixo vindo da seta. */}
+                      {link.isExternal && <ExternalArrow />}
                     </FooterHref>
                   </li>
                 ))}

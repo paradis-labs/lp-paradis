@@ -4,11 +4,12 @@ O artboard "v3 · Get Quote (EN)" (`openspec/design/v3 · Get Quote (EN)-html/`)
 
 ## What Changes
 
-- `/[locale]/get-quote` com o layout do v3: `PageHeader` (eyebrow, H1, lead, pill de disponibilidade) e, por baixo, uma grelha com o formulário num cartão e um **aside** de contacto sticky.
+- `/[locale]/get-quote` com o layout do v3: `PageHeader` (eyebrow, H1, lead) e, por baixo, uma grelha com o formulário num cartão e um **aside** de contacto sticky.
 - **Formulário**: título "Tell us about your project" com subtítulo, nome, e-mail e **empresa (opcional)** numa grelha de duas colunas, chips de interesse com ícone que roda quando selecionados, textarea com placeholder, botão `primary` e nota de privacidade. Inputs e chips com os estados de hover e foco do v3.
 - **Campo empresa**: só renderiza, e só é enviado, quando o formulário `quote_request` do hcms declarar um campo `company`. A label vem desse campo. Sem schema novo neste repo.
 - **Estado de sucesso**: o cartão do formulário dá lugar a uma confirmação (ícone, a mensagem de sucesso do CMS, subtítulo) com um botão "Send another" que repõe o formulário vazio.
 - **Aside de contacto**: "Reach us directly" com o e-mail, "Prefer to talk?" com o CTA de chamada, e "Elsewhere" com as redes. Os títulos e o conteúdo vêm das mesmas fontes que a faixa de contacto direto usa hoje.
+- **Sem pill de disponibilidade**: o artboard deixou de a ter. Sai da página, do tipo `QuotePage` e da leitura do provider. **BREAKING** para o requisito "A pill de disponibilidade é opcional e controlada pelo CMS" de `get-quote-page`, que é removido.
 - **Footer de `/get-quote`**: perde a faixa de contacto direto, que passa a ser o aside, e a faixa "Ready to build?", porque a página já é o destino desse CTA. **BREAKING** para a spec `footer-direct-contact-band`: a faixa deixa de existir no footer.
 
 ## Capabilities
@@ -17,7 +18,7 @@ O artboard "v3 · Get Quote (EN)" (`openspec/design/v3 · Get Quote (EN)-html/`)
 - `quote-contact-aside`: o aside de contacto da página de orçamento: posição, conteúdo, fontes, degradação e comportamento responsivo.
 
 ### Modified Capabilities
-- `get-quote-page`: layout do v3, mapeamento dos textos (eyebrow no cabeçalho, título e subtítulo do formulário como cópia de UI) e o campo de empresa condicionado ao formulário do hcms.
+- `get-quote-page`: layout do v3, mapeamento dos textos (eyebrow no cabeçalho, título e subtítulo do formulário como cópia de UI), o campo de empresa condicionado ao formulário do hcms, e a remoção da pill de disponibilidade.
 - `quote-request-intake`: empresa opcional gravada em `data.company`, e o estado de sucesso com novo envio.
 - `footer-direct-contact-band`: a faixa sai do footer de `/get-quote`. As regras de conteúdo (e-mail do `Contact`, títulos localizados, nomes de plataforma, ordem, degradação) passam para o aside.
 - `route-scoped-footer`: a composição do footer de `/get-quote` passa a ser "sem faixa de contacto e sem faixa CTA".

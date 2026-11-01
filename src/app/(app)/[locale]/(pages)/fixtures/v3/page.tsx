@@ -1,9 +1,9 @@
-import { ArrowRight, ArrowRightDown } from "@solar-icons/react";
 import { notFound } from "next/navigation";
 import type React from "react";
 import Button from "@/components/Button";
 import CallCard from "@/components/CallCard";
 import Eyebrow from "@/components/Eyebrow";
+import { ArrowDownRight, ArrowRight } from "@/components/Glyphs";
 import PageHeader from "@/components/PageHeader";
 import {
   Accordion,
@@ -69,7 +69,7 @@ function ButtonRows() {
           <Button
             key={variant}
             variant={variant}
-            trailingIcon={ArrowRightDown}
+            trailingIcon={ArrowDownRight}
             circleIcon
             textSwap
           >
