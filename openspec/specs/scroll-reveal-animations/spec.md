@@ -14,114 +14,167 @@ Nenhuma primitiva de revelação SHALL observar, para decidir a entrada em viewp
 
 O `IntersectionObserver` calcula a interseção recortando pelo `overflow` dos ancestrais. Observar um elemento deslocado para fora da sua máscara produz um deadlock: ele nunca é relatado como intersectando, logo nunca é revelado, logo nunca sai de fora da máscara. Com revelação de disparo único, o estado é permanente e independe do viewport.
 
-#### Scenario: Palavra mascarada é revelada
+No v3, os cartões das grelhas (serviços, produtos) revelam com stagger dentro de um contentor. O elemento observado é o contentor da grelha (`data-rv`), e os cartões herdam a classe revelada dele.
 
-- **WHEN** um título renderizado por `TextReveal` está inteiramente dentro da viewport, com cada palavra deslocada para fora da sua máscara `overflow-hidden`
-- **THEN** as palavras são reveladas e assumem deslocamento nulo
+#### Scenario: Cartão dentro de grelha recortada é revelado
+
+- **WHEN** a grelha de serviços está inteiramente dentro da viewport, dentro do painel escuro recortado por `clip-path`
+- **THEN** todos os cartões da grelha são revelados e assumem deslocamento nulo
 
 #### Scenario: Observador não é o elemento deslocado
 
-- **WHEN** a implementação de `TextReveal` é inspecionada
-- **THEN** o elemento que carrega a configuração de viewport é a máscara, e o elemento que carrega o deslocamento é descendente dela
+- **WHEN** a implementação da revelação é inspecionada
+- **THEN** o elemento que o observer observa não é nenhum dos elementos que carregam o deslocamento inicial, ou é o próprio elemento sem nenhum ancestral recortante entre ele e a viewport
 
 ### Requirement: Revelação de disparo único não pode usar margem negativa
 
-Uma primitiva cuja revelação seja de disparo único SHALL usar um gatilho de interseção sem margem negativa e com limiar zero, de modo que qualquer parte do elemento visível na viewport revele o elemento.
+Toda primitiva de revelação SHALL usar um gatilho de interseção sem margem negativa e com limiar zero, de modo que qualquer parte do elemento visível na viewport revele o elemento.
 
-Uma margem negativa encolhe a raiz do observer e cria faixas em que um elemento pode estar visível na tela sem nunca ser relatado como intersectando. As duas propriedades são acopladas: essa zona morta só é perigosa junto com disparo único, porque só aí ela é permanente. Sem disparo único, o observer reavalia a cada rolagem e a condição se desfaz sozinha.
+Uma margem negativa encolhe a raiz do observer e cria faixas em que um elemento pode estar visível na tela sem nunca ser relatado como intersectando. Com disparo único, que agora é o único modo, essa zona morta é permanente. O mockup do v3 usa `rootMargin: -8%` e `threshold: 0.12`. A implementação **não** os replica.
 
-Uma primitiva que reanima a cada entrada SHALL, portanto, poder usar margem negativa.
+#### Scenario: Bloco no fim do documento é revelado
 
-#### Scenario: Título mascarado no fim do documento é revelado
+- **WHEN** o último bloco revelável (o cartão "Still have questions?") fica inteiramente dentro dos 80px inferiores da viewport e a página não pode rolar mais para baixo
+- **THEN** o bloco é revelado
 
-- **WHEN** o último título renderizado por `TextReveal` permanece inteiramente dentro dos 80px inferiores da viewport e a página não pode rolar mais para baixo
-- **THEN** o título é revelado
+#### Scenario: Bloco no topo da viewport é revelado
 
-#### Scenario: Título mascarado no topo da viewport é revelado
+- **WHEN** um bloco revelável fica inteiramente dentro dos 80px superiores da viewport e a página não pode rolar mais para cima
+- **THEN** o bloco é revelado
 
-- **WHEN** um título renderizado por `TextReveal` permanece inteiramente dentro dos 80px superiores da viewport e a página não pode rolar mais para cima
-- **THEN** o título é revelado
+#### Scenario: Configuração do observer
 
-#### Scenario: Configuração coerente com o modo de disparo
-
-- **WHEN** as duas primitivas são inspecionadas
-- **THEN** a que usa disparo único não declara margem negativa, e a que reanima pode declará-la
-
-### Requirement: Blocos reanimam a cada entrada na viewport
-
-`Reveal` SHALL reanimar sempre que o elemento entra na viewport, revertendo ao estado oculto ao sair — o comportamento que a primitiva já tinha e que dá ao site sua identidade de scroll.
-
-Uma versão anterior desta change trocou esse comportamento por disparo único, em nome da robustez. A troca foi revertida: a rede de segurança de visibilidade já cobre o caso grave — o React não estar vivo — e o risco residual que o disparo único cobria não justifica abrir mão do replay em toda a página.
-
-O disparo único permanece em `TextReveal`, onde sempre existiu.
-
-#### Scenario: Bloco reverte ao sair da viewport
-
-- **WHEN** um bloco revelado sai completamente da viewport por rolagem
-- **THEN** o bloco retorna ao estado oculto
-
-#### Scenario: Bloco reanima ao retornar
-
-- **WHEN** o usuário rola de volta até um bloco já visto
-- **THEN** a animação de entrada é executada novamente
-
-#### Scenario: Elemento dentro da viewport está sempre visível
-
-- **WHEN** a rolagem para em qualquer posição da página, com o React vivo
-- **THEN** todo elemento animado inteiramente dentro da viewport está com opacidade total
+- **WHEN** a primitiva de revelação é inspecionada
+- **THEN** não declara margem negativa e usa limiar zero
 
 ### Requirement: Elementos animados são identificáveis por marcação
 
-Todo elemento cujo estado inicial de animação seja invisível SHALL carregar um atributo de dados que permita a uma regra de CSS alcançá-lo e forçar sua visibilidade.
+Todo elemento cujo estado inicial de animação seja invisível SHALL carregar um atributo de dados que permita a uma regra de CSS alcançá-lo e forçar a sua visibilidade.
 
-Isso cobre os elementos produzidos por `Reveal`, cada span de palavra produzido por `TextReveal`, e os elementos animados por variants próprios fora das primitivas — incluindo o título, a descrição e o grupo de CTAs do Hero, que animam no mount sem observer e compartilham o mesmo estado de falha.
+Isto cobre os blocos e cartões revelados ao scroll e os elementos do hero que entram em sequência no mount.
 
-#### Scenario: Elementos das primitivas são marcados
+O estado oculto da revelação ao scroll SHALL ser aplicado apenas depois de o JavaScript confirmar que o observer está ativo, como no mockup (`fx`). Sem JavaScript, nenhum bloco revelável começa oculto.
+
+#### Scenario: Elementos revelados são marcados
 
 - **WHEN** a home é renderizada e o DOM é inspecionado
-- **THEN** todo elemento com estado inicial de opacidade zero ou deslocamento que o retire de um recorte carrega o atributo de marcação
+- **THEN** todo o elemento com estado inicial de opacidade zero ou com deslocamento carrega o atributo de marcação
 
-#### Scenario: Palavras do TextReveal são marcadas individualmente
+#### Scenario: Entrada do hero é marcada
 
-- **WHEN** um título renderizado por `TextReveal` é inspecionado
-- **THEN** cada span de palavra que carrega o deslocamento inicial está marcado
+- **WHEN** o hero é inspecionado
+- **THEN** a descrição, o grupo de CTAs e o marquee, que entram em sequência, estão marcados
 
-#### Scenario: Animações fora das primitivas são marcadas
+#### Scenario: Sem JavaScript nada começa oculto
 
-- **WHEN** o Hero é inspecionado
-- **THEN** os elementos animados por seus variants próprios estão marcados, apesar de não usarem as primitivas
+- **WHEN** a home é carregada com o JavaScript desligado
+- **THEN** nenhum bloco revelável ao scroll tem opacidade inferior a 1
 
 ### Requirement: Preferência por movimento reduzido é respeitada sem custo de visibilidade
 
-Quando `prefers-reduced-motion` estiver ativo, as primitivas SHALL usar um caminho de animação reduzido, e esse caminho SHALL estar sujeito às mesmas garantias de visibilidade dos demais.
-
-O caminho de movimento reduzido não SHALL usar máscara de recorte com deslocamento, apenas transição de opacidade.
+Quando `prefers-reduced-motion` estiver ativo, as primitivas SHALL não animar entrada nem o texto ligado ao scroll, e todo o conteúdo SHALL estar no estado final desde o primeiro frame, sujeito às mesmas garantias de visibilidade dos demais caminhos.
 
 #### Scenario: Movimento reduzido com JavaScript ativo
 
 - **WHEN** a home é carregada com `prefers-reduced-motion: reduce` e o React hidrata normalmente
-- **THEN** os textos aparecem sem deslocamento e todo o conteúdo textual é legível
+- **THEN** os blocos aparecem sem deslocamento nem fade, e todo o conteúdo textual é legível
 
 #### Scenario: Movimento reduzido sem JavaScript
 
 - **WHEN** a home é carregada com `prefers-reduced-motion: reduce` e o JavaScript não executa
 - **THEN** todo o conteúdo textual é legível
 
+#### Scenario: Título do about sob movimento reduzido
+
+- **WHEN** a home é carregada com `prefers-reduced-motion: reduce`
+- **THEN** o título do about está a opacidade 1, sem animação
+
 #### Scenario: Sinal de vivacidade do React sob movimento reduzido
 
 - **WHEN** a home é carregada com `prefers-reduced-motion: reduce` e o React hidrata normalmente
 - **THEN** o sinal de que o React está vivo é emitido, e o mecanismo de segurança de visibilidade não é acionado
 
-### Requirement: Animação no caminho feliz permanece inalterada
+### Requirement: A página `/get-quote` revela por blocos sem esconder campos
 
-Excetuadas as mudanças de gatilho e de replay definidas nos requisitos acima, as animações de entrada SHALL permanecer visualmente idênticas ao comportamento anterior à mudança: mesmas durações, mesmas curvas de easing, mesmo stagger, mesmas direções e mesmas distâncias de deslocamento.
+A página `/[locale]/get-quote` SHALL usar `Reveal` em dois níveis: o cabeçalho (pill de disponibilidade, título, subtítulo), com atraso escalonado, e o formulário inteiro como um único bloco. Campos individuais do formulário SHALL NOT ser envolvidos em `Reveal`.
 
-#### Scenario: Parâmetros de animação preservados
+As mensagens de erro de validação SHALL estar dentro do bloco do formulário e SHALL ser visíveis sempre que o formulário está na viewport.
 
-- **WHEN** as primitivas são comparadas com sua versão anterior à mudança
-- **THEN** duração, easing, stagger e distância de deslocamento são os mesmos
+O primeiro bloco do cabeçalho SHALL começar sem atraso, para não se ler como uma segunda animação sobre a transição de entrada do `template.tsx`.
 
-#### Scenario: Revelação por palavra preservada
+#### Scenario: Navegação por teclado
 
-- **WHEN** um título renderizado por `TextReveal` é revelado com JavaScript ativo
-- **THEN** as palavras sobem de dentro da máscara em sequência escalonada, como antes da mudança
+- **WHEN** o visitante percorre o formulário com Tab até um campo que estava abaixo da dobra
+- **THEN** o campo com foco está com opacidade total quando recebe o foco
+
+#### Scenario: Erro de validação
+
+- **WHEN** a submissão devolve erros
+- **THEN** as mensagens de erro estão visíveis sem que o visitante tenha de rolar a página
+
+#### Scenario: Movimento reduzido
+
+- **WHEN** `/get-quote` é carregada com `prefers-reduced-motion: reduce`
+- **THEN** os blocos aparecem sem deslocamento e todo o conteúdo é legível
+
+### Requirement: Blocos revelam uma única vez
+
+Um bloco revelável SHALL passar ao estado revelado na primeira vez que intersecta a viewport e SHALL permanecer revelado até ao fim da vida da página. Depois de revelado, o observer SHALL deixar de observar esse elemento.
+
+#### Scenario: Bloco não reverte ao sair da viewport
+
+- **WHEN** um bloco revelado sai completamente da viewport por rolagem
+- **THEN** o bloco continua com opacidade total e deslocamento nulo
+
+#### Scenario: Bloco não reanima ao retornar
+
+- **WHEN** o utilizador rola de volta até um bloco já visto
+- **THEN** nenhuma animação de entrada é executada
+
+#### Scenario: Elemento dentro da viewport está sempre visível
+
+- **WHEN** a rolagem para em qualquer posição da página, com o React vivo
+- **THEN** todo o elemento animado inteiramente dentro da viewport está com opacidade total
+
+### Requirement: Os parâmetros de animação são os do v3
+
+As animações de entrada SHALL usar os valores do artboard "v3 · EN":
+
+- revelação ao scroll: opacidade 0→1 e `translateY(36px)`→0 em 1 s, `cubic-bezier(0.165, 0.84, 0.44, 1)`; o vídeo dos serviços entra por `scale(.75)`→1 com a mesma curva;
+- stagger: 0,07 s por cartão de serviço e 0,12 s por cartão de produto;
+- entrada do hero: `translateY(100px)`→0 em 1 s, mesma curva, com atrasos de 0,4 s, 0,5 s, 0,6 s e 0,7 s para H1, descrição, CTAs e marquee.
+
+#### Scenario: Parâmetros de revelação
+
+- **WHEN** a regra de CSS da revelação é inspecionada
+- **THEN** a duração, a curva e a distância são as listadas acima
+
+#### Scenario: Stagger das grelhas
+
+- **WHEN** a grelha de serviços é revelada
+- **THEN** o n-ésimo cartão tem atraso de transição de `0,07 × n` segundos
+
+### Requirement: O H1 do hero é pintado no primeiro frame
+
+O H1 do hero é o elemento de LCP. Ele SHALL ter opacidade total desde o primeiro frame e SHALL entrar só por deslocamento. Os restantes elementos do hero podem entrar com fade.
+
+O mockup anima o H1 a partir de `opacity: 0`. A implementação desvia-se de propósito, pelo ponto P1 da Motion spec ("Não esconder o H1 do hero").
+
+#### Scenario: LCP não espera pela animação
+
+- **WHEN** a home é carregada com JavaScript ativo e sem movimento reduzido
+- **THEN** o H1 tem opacidade 1 em todos os frames da animação de entrada
+
+#### Scenario: A entrada não depende de JavaScript
+
+- **WHEN** a home é carregada com o JavaScript desligado
+- **THEN** a entrada do hero corre igual, porque é uma animação de CSS, e no fim todos os elementos estão legíveis
+
+### Requirement: Título do about ligado ao scroll
+
+O título da secção about SHALL acender letra a letra com o scroll, como define `scroll-lit-text` (change `v3-scroll-lit-text`), que substitui o sweep em gradiente da versão anterior do canvas.
+
+#### Scenario: Navegador sem suporte
+
+- **WHEN** a home é vista num navegador sem `animation-timeline`
+- **THEN** o título está a opacidade 1, na cor sólida `#151718`, e é legível

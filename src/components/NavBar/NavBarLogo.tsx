@@ -1,13 +1,13 @@
 import Image from "next/image";
 import Link from "next/link";
-import React from "react";
 
 interface NavBarLogoProps {
   imgSrc: string;
   href?: string;
   width?: number;
   height?: number;
-  className?: string;
+  /** O nome acessível do link, que leva à home. */
+  label: string;
 }
 
 export default function NavBarLogo({
@@ -15,11 +15,15 @@ export default function NavBarLogo({
   href = "/",
   width = 134,
   height = 25,
-  className,
+  label,
 }: NavBarLogoProps) {
   return (
-    <Link href={href} className={className}>
-      <Image src={imgSrc} alt="Logo" width={width} height={height} />
+    <Link
+      href={href}
+      aria-label={label}
+      className="inline-flex h-10 items-center justify-self-start"
+    >
+      <Image src={imgSrc} alt="" width={width} height={height} priority />
     </Link>
   );
 }

@@ -12,15 +12,15 @@ _Introduzida por `add-navbar-locale-switch`, sincronizada ao arquivar._
 
 Cada botão do array `buttons` do global `Menu` SHALL renderizar um destino navegável usando o seu campo `url`.
 
-Hoje [`Header/index.tsx`](../../../../src/components/Header/index.tsx) mapeia `args.buttons` para `<Button>` sem `asChild`, sem `onClick` e sem ler `btn.url` — o campo é preenchível no admin e o botão é inerte. O botão "Get Quote" é o caminho de conversão principal do site.
+O botão "Get Quote" é o caminho de conversão principal do site.
 
-O `Button` SHALL receber `asChild` a envolver um `Link`, com um único filho React, pela restrição do `Slot` que o footer documenta.
+O `Button` SHALL receber o destino por `href`, e não por `asChild`. Com `href`, um destino interno SHALL navegar pelo `Link` do `next/link` (prefetch e roteamento de cliente), e o botão SHALL manter as camadas da animação do v3 (`button-hover-inversion`). O `asChild` sobre um `Link` dava o roteamento sem as camadas, porque o `Slot` aceita um só filho.
 
 #### Scenario: Botão com URL
 
 - **WHEN** o global `Menu` tem um botão com `label: "Get Quote"` e `url: "/get-quote"`, e o visitante está em `/en`
 - **THEN** o botão é uma âncora para `/en/get-quote`
-- **AND** clicar nele navega para a página de orçamento
+- **AND** clicar nele navega para a página de orçamento por roteamento de cliente
 
 #### Scenario: Botão sem URL authorada
 
@@ -37,7 +37,7 @@ O `Button` SHALL receber `asChild` a envolver um `Link`, com um único filho Rea
 
 Um `href` que comece por `/` SHALL ser prefixado com o locale corrente. Um `href` que não comece por `/` SHALL ser devolvido intacto — `#ancora`, `mailto:`, `tel:` e URL absoluta, porque prefixar qualquer um deles quebraria o destino.
 
-A raiz `/` SHALL tornar-se `/<locale>`, e não `/<locale>/`.
+A raiz SHALL tornar-se `/<locale>`, e não `/<locale>/`. "Raiz" inclui qualquer href cujo caminho seja `/`, mesmo que seguido de âncora ou query: `/`, `/#seccao` e `/?q=1` SHALL produzir `/<locale>`, `/<locale>#seccao` e `/<locale>?q=1`. Com `trailingSlash: false`, a barra a mais faz o Next normalizar `/<locale>/` para `/<locale>` numa navegação de rota, e o hash perde-se pelo caminho.
 
 O prefixo SHALL ser montado por um helper partilhado em `src/lib/locale-href.ts`, com a mesma semântica que o footer já aplica. O helper replica à mão o `localePrefix: "always"` que é o default do next-intl e que [`routing.ts`](../../../../src/i18n/routing.ts) não sobrescreve — o módulo SHALL registar esse acoplamento em comentário, porque uma alteração a `routing.ts` quebraria o prefixo sem erro de tipo nem teste a falhar.
 
@@ -51,10 +51,20 @@ O prefixo SHALL ser montado por um helper partilhado em `src/lib/locale-href.ts`
 - **WHEN** um link do CMS tem `url: "/"` e o visitante está em `/pt`
 - **THEN** a âncora aponta para `/pt`
 
-#### Scenario: Âncora na mesma página
+#### Scenario: Âncora na raiz
 
 - **WHEN** um link do CMS tem `url: "/#services"` e o visitante está em `/pt`
-- **THEN** a âncora aponta para `/pt/#services`
+- **THEN** a âncora aponta para `/pt#services`, sem barra entre o locale e o hash
+
+#### Scenario: Âncora na raiz a partir de outra rota
+
+- **WHEN** o visitante está em `/en/get-quote` e clica num link do navbar com `url: "/#about-us"`
+- **THEN** a navegação termina em `/en` com a secção `#about-us` na viewport
+
+#### Scenario: Query na raiz
+
+- **WHEN** um link do CMS tem `url: "/?ref=nav"` e o visitante está em `/pt`
+- **THEN** a âncora aponta para `/pt?ref=nav`
 
 #### Scenario: Âncora sem barra inicial
 
@@ -114,3 +124,32 @@ Este requisito é a razão de os links entrarem no mesmo escopo do switch: um sw
 - **WHEN** o visitante em `/en` troca para `/pt` e depois clica no link "Services" do navbar
 - **THEN** chega ao destino no locale `pt`
 - **AND** não é devolvido a `en`
+
+### Requirement: Link corrente do navbar
+
+O navbar (desktop e menu mobile) SHALL marcar um único link como corrente, com estas regras por ordem:
+
+1. Um link de secção (com hash, ex.: `/#services`) é corrente quando essa secção é a mais visível na viewport.
+2. Com uma secção ativa, nenhum link de página é corrente.
+3. Um link de página é corrente quando o pathname é igual ao seu `href`, ou desce dele por segmento inteiro (`/en/products/kitenda` desce de `/en/products`, `/en/products-old` não).
+4. A raiz do locale (`/en`, `/pt`) só é corrente por igualdade. Se descesse por segmento, "Home" ficava corrente em todas as páginas.
+
+#### Scenario: Página de detalhe
+
+- **WHEN** o visitante está em `/en/products/kitenda`
+- **THEN** "Products" está marcado como corrente e "Home" não
+
+#### Scenario: Prefixo sem fronteira de segmento
+
+- **WHEN** existe uma rota `/en/products-archive` e o visitante está nela
+- **THEN** "Products" (`/en/products`) não está marcado
+
+#### Scenario: Raiz do locale
+
+- **WHEN** o visitante está em `/pt/get-quote`
+- **THEN** "Home" (`/pt`) não está marcado
+
+#### Scenario: Home com secção ativa
+
+- **WHEN** o visitante está na home com a secção de serviços a meio do ecrã
+- **THEN** "Services" é o link corrente e "Home" não

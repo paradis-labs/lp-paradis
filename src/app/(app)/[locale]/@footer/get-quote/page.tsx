@@ -1,36 +1,23 @@
-import { cache } from "react";
 import Footer from "@/components/Footer";
-import type { Locale } from "@/i18n/routing";
-import {
-  getContactPayload,
-  getFooterPayload,
-} from "@/service/payload-functions";
+import { getFooter } from "@/content";
+import { requireLocale } from "@/i18n/require-locale";
 
-// O footer da página de orçamento: o mesmo componente das outras rotas, mais a
-// faixa de contacto direto. É esta folha do slot `@footer` que faz da faixa uma
-// coisa de uma rota só — o mapeamento rota → composição vive aqui, em código, e
-// não numa flag do CMS, que ligaria a faixa em todo o lado ou em lado nenhum.
+// O footer da página de orçamento: o mesmo componente das outras rotas, sem a
+// faixa "Ready to build?" — a página já é o destino desse CTA. É esta folha do
+// slot `@footer` que faz disso uma coisa de uma rota só: o mapeamento rota →
+// composição vive aqui, em código, e não numa flag do CMS, que ligaria a
+// variante em todo o lado ou em lado nenhum (`route-scoped-footer`).
 //
-// A busca do `Contact` acontece **só aqui**. É a razão de a faixa não custar
-// nada às outras rotas: o `default.tsx` ao lado não a conhece, e para um dado
-// request só uma das duas folhas corre.
-
+// O contacto direto e as redes, que esta folha montava numa faixa própria,
+// passaram para o aside da página (`quote-contact-aside`), e a busca do
+// `Contact` foi com eles. O total de leituras por request não muda.
 export default async function GetQuoteFooter({
   params,
 }: {
-  params: Promise<{ locale: Locale }>;
+  params: Promise<{ locale: string }>;
 }) {
-  const { locale } = await params;
+  const locale = requireLocale((await params).locale);
+  const footerData = await getFooter(locale);
 
-  const footerData = await  getFooterPayload(locale)
-  
-
- 
-  const contactBand = {
-    reachHeading: footerData.directContact?.reachHeading,
-    socialHeading: footerData.directContact?.socialHeading,
-    email: footerData.directContact?.emailHeading,
-  };
-
-  return <Footer {...footerData} locale={locale} contactBand={contactBand} />;
+  return <Footer {...footerData} locale={locale} ctaBand={false} />;
 }

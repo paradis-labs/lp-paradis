@@ -37,7 +37,13 @@ export function localizedHref(href: string, locale: Locale): string {
   if (!href.startsWith("/")) return href;
 
   // `/` vira `/pt`, não `/pt/` — a barra final produziria um redirect a mais.
-  return href === "/" ? `/${locale}` : `/${locale}${href}`;
+  // `/#seccao` e `/?q=1` partilham o mesmo caminho-raiz e seguem a mesma regra:
+  // com `trailingSlash: false` o Next normaliza `/pt/#seccao` para `/pt` numa
+  // navegação de rota, e o hash perde-se pelo caminho (#13).
+  const rest = href.slice(1);
+  return rest === "" || rest.startsWith("#") || rest.startsWith("?")
+    ? `/${locale}${rest}`
+    : `/${locale}${href}`;
 }
 
 // O `href` de um CTA authorado, pronto a entregar ao `Button`.

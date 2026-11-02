@@ -3,60 +3,45 @@
 import Link from "next/link";
 import type React from "react";
 import { twJoin } from "tailwind-merge";
-import type { Locale } from "@/i18n/routing";
-import { localizedHref } from "@/lib/locale-href";
-import { useNavActive } from "./NavActiveContext";
-import { useNavMobileMenu } from "./NavMobileMenuContext";
+import RollText from "../RollText";
+import { useIsNavLinkActive } from "./NavActiveContext";
 
 interface NavBarItemProps {
-  href?: string;
-  // O locale corrente, vindo do servidor pelo `Header`. Sem ele o `href` cru do
-  // CMS (`/#services`) navegava sem prefixo e o middleware decidia o idioma pelo
-  // cookie — trocar para `/pt` e clicar num link devolvia o visitante a `/en`.
-  locale: Locale;
+  // O destino JÁ resolvido pelo `Header`: prefixo de locale aplicado ao que é
+  // interno. O hash da secção vem à parte, calculado a partir do `url` CRU do
+  // CMS antes do prefixo, para a relação com `activeHash` não depender da forma
+  // do prefixo.
+  href: string;
+  hash?: string;
   openInNewTab?: boolean;
   children: React.ReactNode;
-  className?: string;
 }
 
+// Um link da barra desktop. O rótulo rola no hover (`RollText`), e a cópia que
+// entra já é da cor do link activo — o hover antecipa o estado.
 export default function NavBarItem({
   href,
-  locale,
+  hash,
   openInNewTab = false,
   children,
-  className,
 }: NavBarItemProps) {
-  const { activeHash } = useNavActive();
-  const { close } = useNavMobileMenu();
-
-  // O hash é calculado a partir do `href` CRU, antes do prefixo. Prefixar não
-  // muda a parte depois do `#`, mas manter o cálculo na origem deixa a relação
-  // com `activeHash` óbvia em vez de dependente da forma do prefixo.
-  const hash = href?.includes("#") ? href.split("#")[1] : undefined;
-  const isActive = !!hash && hash === activeHash;
-
-  const destination = href ? localizedHref(href, locale) : "#";
+  const isActive = useIsNavLinkActive(href, hash);
 
   return (
-    <li
-      className={twJoin(
-        "flex items-start justify-start px-5 py-0 lg:py-2",
-        className,
-      )}
-    >
+    <li className="flex h-10 items-center px-[18px]">
       <Link
-        href={destination}
-        onClick={close}
+        href={href}
         target={openInNewTab ? "_blank" : undefined}
         rel={openInNewTab ? "noopener noreferrer" : undefined}
+        aria-current={isActive ? "page" : undefined}
         className={twJoin(
-          "font-normal text-[26px] lg:text-base transition-colors duration-200 lg:hover:text-primary",
-          isActive
-            ? "text-white lg:text-primary"
-            : "text-white/70 lg:text-neutral-600",
+          "text-[15px] leading-5",
+          isActive ? "font-semibold text-foreground" : "text-stone",
         )}
       >
-        {children}
+        <RollText className="h-5" hoverClassName="text-foreground">
+          {children}
+        </RollText>
       </Link>
     </li>
   );

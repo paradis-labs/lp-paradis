@@ -1,138 +1,156 @@
-import { ArrowRightDown } from "@solar-icons/react";
+import type { Metadata } from "next";
 import CalendlyCta from "@/components/CalendlyCta";
 import FAQSection from "@/components/FAQSection";
+import { ArrowDownRight } from "@/components/Glyphs";
 import Hero from "@/components/Hero";
+import LitText from "@/components/LitText";
 import MarqueeServices from "@/components/MarqueeServices";
 import ProductsSection from "@/components/ProductsSection";
+import Reveal from "@/components/Reveal";
 import ServicesSection from "@/components/ServicesSection";
 import TestimonialsSection from "@/components/TestimonialsSection";
-import { Parallax } from "@/components/ui/parallax";
-import { Reveal } from "@/components/ui/reveal";
-import { TextReveal } from "@/components/ui/text-reveal";
 import { VideoAutoPause } from "@/components/ui/video-autopause";
+import { getHomepage, getSiteSeo } from "@/content";
+import { requireLocale } from "@/i18n/require-locale";
 import type { Locale } from "@/i18n/routing";
 import { localizedCtaHref } from "@/lib/locale-href";
-import { getHomepagePayload } from "@/service/payload-functions";
+import { pageMetadata } from "@/lib/page-metadata";
+
+// Sem `title`: a home usa o `title.default` do layout, e um título aqui sairia
+// com o molde ("Paradis — Paradis").
+export async function generateMetadata(props: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const locale = requireLocale((await props.params).locale);
+  return pageMetadata(await getSiteSeo(locale), locale, "");
+}
+
+// O nome acessível do marquee de serviços.
+const MARQUEE_LABEL: Record<Locale, string> = {
+  en: "Services",
+  pt: "Serviços",
+};
 
 export default async function Home(props: {
-  params: Promise<{ locale: Locale }>;
+  params: Promise<{ locale: string }>;
 }) {
-  const params = await props.params;
-
-  const { locale } = params;
+  const locale = requireLocale((await props.params).locale);
   const { hero, services, projects, faqs, testimonials } =
-    await getHomepagePayload(locale);
+    await getHomepage(locale);
 
-  const bgVideo = services?.ourServicesCT?.backgroundVideo;
-  const videoUrl =
-    bgVideo && typeof bgVideo === "object"
-      ? (bgVideo.url ?? undefined)
-      : undefined;
+  const videoUrl = services.ourServicesCT.backgroundVideo?.url ?? undefined;
+  const posterUrl = services.ourServicesCT.backgroundPoster?.url ?? undefined;
+
+  // O cartão "Still have questions?" do FAQ reutiliza o CTA de chamada do hero.
+  const callHref = hero.item
+    ? localizedCtaHref(hero.item.secondaryCta.url, locale)
+    : undefined;
+  const callLabel = hero.item?.secondaryCta.label;
+  const callCta =
+    callHref && callLabel ? { label: callLabel, href: callHref } : undefined;
 
   return (
     <main>
-      {hero && hero.item && hero.enabled && (
+      {hero.enabled && hero.item && (
         <Hero
           {...hero.item}
-          primaryCtaHref={localizedCtaHref(hero.item.primaryCta?.url, locale)}
-          secondaryCtaHref={localizedCtaHref(
-            hero.item.secondaryCta?.url,
-            locale,
-          )}
+          primaryCtaHref={localizedCtaHref(hero.item.primaryCta.url, locale)}
+          secondaryCtaHref={callHref}
         />
       )}
-      {services && services.items && services.items.length > 0 && (
-        <MarqueeServices services={services.items} />
+      {services.items.length > 0 && (
+        <MarqueeServices
+          services={services.items}
+          label={MARQUEE_LABEL[locale]}
+        />
       )}
-      <div className="w-full h-full flex flex-col items-center justify-center pb-11">
-        <section className="container w-full mx-auto px-4 xl:px-0 py-12 flex flex-col gap-5 leading-8">
-          <Reveal className="w-full xl:w-149.5 h-full flex flex-col gap-6 py-10 z-10">
-            <div
-              className="w-full flex flex-col items-center justify-center gap-6 "
-              id="about-us"
-            >
-              <div>
-                {services?.title && (
-                  <TextReveal
-                    as="h2"
-                    className="font-gilroy text-4xl font-medium text-neutral-900"
-                  >
-                    {services.title}
-                  </TextReveal>
-                )}
-              </div>
-              <div>
-                <p className="text-xl text-muted-foreground">
-                  {services?.subtitle}
+      <div className="flex w-full flex-col items-center pb-11">
+        <section className="container mx-auto flex w-full flex-col gap-5 py-12 leading-8">
+          <Reveal
+            id="about-us"
+            className="gutter relative z-2 flex w-full flex-col gap-7 py-10 xl:w-149.5"
+          >
+            <div className="flex flex-col gap-5">
+              {services.title && (
+                <h2 className="font-gilroy text-[30px] leading-[1.15] font-medium tracking-[-0.02em] text-balance md:text-[40px]">
+                  <LitText text={services.title} />
+                </h2>
+              )}
+              {services.subtitle && (
+                <p className="text-[19px] leading-[31px] text-muted-foreground">
+                  {services.subtitle}
                 </p>
+              )}
+            </div>
+            {services.primaryCta.label && (
+              <div>
+                <CalendlyCta
+                  variant="outline"
+                  href={localizedCtaHref(services.primaryCta.url, locale)}
+                  trailingIcon={ArrowDownRight}
+                  circleIcon
+                  textSwap
+                >
+                  {services.primaryCta.label}
+                </CalendlyCta>
               </div>
-            </div>
-            <div className="w-full flex justify-start">
-              <CalendlyCta
-                variant="outline"
-                href={localizedCtaHref(services?.primaryCta?.url, locale)}
-                trailingIcon={ArrowRightDown}
-                circleIcon
-                magnetic
-                textSwap
-              >
-                <span>{services?.primaryCta?.label}</span>
-              </CalendlyCta>
-            </div>
+            )}
           </Reveal>
-          <div className="w-full md:relative xl:-mt-102 md:pt-102 flex flex-col items-center justify-center gap-6 services_notch_corner">
-            <div className="hidden md:block w-full xl:w-149.5 h-117.5 bg-primary video_shape md:absolute right-0 top-0 rounded-2xl relative overflow-hidden">
-              <Parallax className="absolute inset-0" amount={6}>
-                <VideoAutoPause>
-                  <video
-                    className="h-[112%] w-full mt-[-6%] object-cover"
-                    autoPlay
-                    muted
-                    loop
-                    playsInline
-                  >
-                    <source
-                      src={videoUrl}
-                      type="video/mp4"
-                      media="(min-width: 768px)"
-                    />
-                  </video>
-                </VideoAutoPause>
-              </Parallax>
-            </div>
-            <div className="w-full bg-primary flex flex-col rounded-2xl pb-12 pt-12 md:pt-34 gap-32 services_shape">
-              {services && (
-                <div id="services">
-                  <ServicesSection services={services} />
-                </div>
-              )}
-              {projects && (
-                <div id="products">
-                  <ProductsSection
-                    projects={projects}
-                    ctaHref={localizedCtaHref(
-                      projects?.primaryCta?.url,
-                      locale,
-                    )}
+          <div className="services_notch_corner flex w-full flex-col items-center justify-center gap-6 md:relative md:pt-102 xl:-mt-102">
+            <Reveal
+              grow
+              className="video_shape relative hidden h-117.5 w-full overflow-hidden rounded-2xl bg-[radial-gradient(120%_90%_at_70%_30%,#31373d_0%,#212528_45%,#151718_100%)] md:absolute md:top-0 md:right-0 md:block xl:w-149.5"
+            >
+              {/* Sem `autoPlay`, com `preload="none"` e com `poster` (P1 da
+                  Motion spec): com `autoPlay` o browser descarregava o MP4
+                  inteiro no load, com o vídeo abaixo da dobra. Quem o põe a
+                  tocar é o `VideoAutoPause`, quando entra no ecrã; até lá
+                  mostra a imagem do bloco `#about-us`, ou o gradiente. */}
+              <VideoAutoPause>
+                <video
+                  className="size-full object-cover"
+                  muted
+                  loop
+                  playsInline
+                  preload="none"
+                  poster={posterUrl}
+                >
+                  <source
+                    src={videoUrl}
+                    type="video/mp4"
+                    media="(min-width: 768px)"
                   />
-                </div>
-              )}
-              {testimonials && (
-                <div id="testimonials">
-                  <TestimonialsSection
-                    testimonials={testimonials}
-                    locale={locale}
-                  />
-                </div>
-              )}
+                </video>
+              </VideoAutoPause>
+            </Reveal>
+            <div
+              data-cursor-tone="light"
+              className="services_shape flex w-full flex-col gap-20 rounded-2xl bg-primary py-12 md:gap-26 md:pt-34 md:pb-16 xl:gap-32"
+            >
+              <div id="services">
+                <ServicesSection services={services} locale={locale} />
+              </div>
+              <div id="products">
+                <ProductsSection
+                  projects={projects}
+                  locale={locale}
+                  ctaHref={localizedCtaHref(projects.primaryCta.url, locale)}
+                />
+              </div>
+              <div id="testimonials">
+                <TestimonialsSection
+                  testimonials={testimonials}
+                  locale={locale}
+                />
+              </div>
             </div>
           </div>
         </section>
         <section
           id="faqs"
-          className="container w-full mx-auto px-4 xl:px-0 py-12 flex flex-col gap-5 leading-8"
+          className="container mx-auto flex w-full flex-col gap-5 px-5 pt-16 pb-12 leading-8 md:px-6 xl:px-0"
         >
-          {faqs && <FAQSection {...faqs} />}
+          <FAQSection {...faqs} locale={locale} callCta={callCta} />
         </section>
       </div>
     </main>

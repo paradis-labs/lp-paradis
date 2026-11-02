@@ -1,4 +1,5 @@
 import { z } from "zod";
+import type { Locale } from "@/i18n/routing";
 
 // O contrato da submissão de `/get-quote`, partilhado pela Server Action e pelo
 // componente de cliente. O cliente valida para dar retorno imediato; a action
@@ -12,6 +13,7 @@ export const QUOTE_LIMITS = {
   name: 120,
   email: 200,
   message: 4000,
+  company: 160,
   interests: 12,
 } as const;
 
@@ -56,6 +58,9 @@ export const quoteSubmissionSchema = z.object({
     .trim()
     .min(1, "messageRequired")
     .max(QUOTE_LIMITS.message, "tooLong"),
+  // Opcional. Vazio depois do trim conta como ausente — a action passa `null`
+  // ao provider, que só o grava se o formulário do hcms declarar o campo.
+  company: z.string().trim().max(QUOTE_LIMITS.company, "tooLong").optional(),
   // Slugs de serviço, não ids: o slug é a identidade estável de um interesse
   // (um `title` reescrito no CMS não pode invalidar submissões antigas). A
   // action resolve-os contra a coleção e descarta o que não existir.
@@ -84,22 +89,34 @@ export type QuoteFormState =
 
 // Piso de cada mensagem, pela razão que `lib/cms-text.ts` documenta: o campo
 // correspondente da global pode estar vazio, e uma mensagem de erro em branco
-// deixa o visitante sem saber o que corrigir.
-export const QUOTE_MESSAGE_FALLBACK: Record<
+// deixa o visitante sem saber o que corrigir. Um piso por idioma: em `/pt`, uma
+// mensagem vazia no CMS cai em português. As cópias `pt` são as do formulário
+// `quote_request` no hcms.
+export type QuoteMessages = Record<
   QuoteErrorCode | "success" | "error",
   string
-> = {
-  success:
-    "Thanks — we've got your brief. We'll reply within one business day.",
-  error: "Something went wrong sending your enquiry. Please try again.",
-  nameRequired: "Please tell us your name.",
-  emailRequired: "Please enter your email.",
-  emailInvalid: "That email doesn't look right.",
-  messageRequired: "Please tell us about your project.",
-  tooLong: "That's a bit too long — please shorten it.",
-};
+>;
 
-export type QuoteMessages = typeof QUOTE_MESSAGE_FALLBACK;
+export const QUOTE_MESSAGE_FALLBACK: Record<Locale, QuoteMessages> = {
+  en: {
+    success: "We'll reply within one business day.",
+    error: "Something went wrong sending your enquiry. Please try again.",
+    nameRequired: "Please tell us your name.",
+    emailRequired: "Please enter your email.",
+    emailInvalid: "That email doesn't look right.",
+    messageRequired: "Please tell us about your project.",
+    tooLong: "That's a bit too long — please shorten it.",
+  },
+  pt: {
+    success: "Respondemos dentro de um dia útil.",
+    error: "Algo correu mal ao enviar o seu pedido. Tente novamente.",
+    nameRequired: "Diga-nos o seu nome.",
+    emailRequired: "Indique o seu e-mail.",
+    emailInvalid: "Esse e-mail não parece válido.",
+    messageRequired: "Fale-nos do seu projecto.",
+    tooLong: "É um pouco longo — encurte, por favor.",
+  },
+};
 
 // Traduz o `ZodError` para o mapa de códigos por campo. Só o primeiro erro de
 // cada campo interessa — o formulário mostra uma mensagem por campo.

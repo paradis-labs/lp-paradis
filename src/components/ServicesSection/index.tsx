@@ -1,4 +1,3 @@
-"use client";
 import {
   Chart,
   Cpu,
@@ -7,23 +6,29 @@ import {
   Palette2,
   ServerPath,
   Smartphone,
-  Widget6,
 } from "@solar-icons/react";
 import type React from "react";
-import type { PopulatedHomepage } from "@/service/types";
-import Badge from "../Badge";
-import { Reveal } from "../ui/reveal";
-import { TextReveal } from "../ui/text-reveal";
+import Reveal from "@/components/Reveal";
+import type { Homepage } from "@/content";
+import type { Locale } from "@/i18n/routing";
+import SectionHeading from "../SectionHeading";
+
+const BADGE: Record<Locale, string> = {
+  en: "Our Services",
+  pt: "Serviços",
+};
 
 type ServiceLayoutSpacer = { transparent: true; className: string };
 
 type ServiceLayoutCard = {
-  // Merge key — must match the service `slug` created in Payload.
+  // Merge key — the service `slug` that `@/content` delivers, the same for
+  // both providers (the `en-US` slug on the hcms).
   slug: string;
   Icon: React.ElementType;
   className: string;
-  fallbackName: string;
-  fallbackDescription: string;
+  // Shown only when the CMS has no service with this slug — in the route's
+  // locale, so a missing service never brings English into `/pt`.
+  fallback: Record<Locale, { name: string; description: string }>;
 };
 
 type ServiceLayoutCell = ServiceLayoutSpacer | ServiceLayoutCard;
@@ -46,47 +51,92 @@ const SERVICE_LAYOUT: ServiceLayoutCell[] = [
       "hidden md:block md:col-span-3 md:row-span-3 md:col-start-10 md:row-start-1",
   }, // 5
   {
-    slug: "uiux-design",
+    slug: "ui-ux-design",
     Icon: Palette2,
-    fallbackName: "UI/UX Design",
-    fallbackDescription:
-      "Designing intuitive and engaging digital experiences that users love.",
+    fallback: {
+      en: {
+        name: "UI/UX Design",
+        description:
+          "Designing intuitive and engaging digital experiences that users love.",
+      },
+      pt: {
+        name: "Design UI/UX",
+        description:
+          "Desenhamos experiências digitais intuitivas e envolventes, que os utilizadores adoram.",
+      },
+    },
     className:
       "min-h-[120px] md:min-h-0 md:col-span-3 md:row-span-2 md:col-start-4 md:row-start-2",
   },
   {
     slug: "brand-identity",
     Icon: Filters,
-    fallbackName: "Brand Identity",
-    fallbackDescription:
-      "Building memorable visual identities that elevate your brand presence.",
+    fallback: {
+      en: {
+        name: "Brand Identity",
+        description:
+          "Building memorable visual identities that elevate your brand presence.",
+      },
+      pt: {
+        name: "Identidade de marca",
+        description:
+          "Criamos identidades visuais memoráveis que reforçam a presença da sua marca.",
+      },
+    },
     className:
       "min-h-[120px] md:min-h-0 md:col-span-3 md:row-span-2 md:col-start-7 md:row-start-2",
   },
   {
     slug: "mobile-development",
     Icon: Smartphone,
-    fallbackName: "Mobile Development",
-    fallbackDescription:
-      "Creating fast, scalable, and user-focused mobile applications.",
+    fallback: {
+      en: {
+        name: "Mobile Development",
+        description:
+          "Creating fast, scalable, and user-focused mobile applications.",
+      },
+      pt: {
+        name: "Desenvolvimento mobile",
+        description:
+          "Criamos aplicações móveis rápidas, escaláveis e centradas no utilizador.",
+      },
+    },
     className:
       "min-h-[120px] md:min-h-0 md:col-span-3 md:row-span-2 md:col-start-2 md:row-start-4",
   },
   {
     slug: "web-development",
     Icon: Laptop,
-    fallbackName: "Web Development",
-    fallbackDescription:
-      "Developing modern websites and web platforms built for performance.",
+    fallback: {
+      en: {
+        name: "Web Development",
+        description:
+          "Developing modern websites and web platforms built for performance.",
+      },
+      pt: {
+        name: "Desenvolvimento web",
+        description:
+          "Desenvolvemos sites e plataformas web modernas, pensadas para o desempenho.",
+      },
+    },
     className:
       "min-h-[120px] md:min-h-0 md:col-span-4 md:row-span-2 md:col-start-5 md:row-start-4",
   },
   {
     slug: "api-integrations",
     Icon: ServerPath,
-    fallbackName: "API & Integrations",
-    fallbackDescription:
-      "Connecting systems and services to streamline digital operations.",
+    fallback: {
+      en: {
+        name: "API & Integrations",
+        description:
+          "Connecting systems and services to streamline digital operations.",
+      },
+      pt: {
+        name: "APIs e integrações",
+        description:
+          "Ligamos sistemas e serviços para simplificar as operações digitais.",
+      },
+    },
     className:
       "min-h-[120px] md:min-h-0 md:col-span-3 md:row-span-2 md:col-start-9 md:row-start-4",
   },
@@ -98,18 +148,36 @@ const SERVICE_LAYOUT: ServiceLayoutCell[] = [
   {
     slug: "ai-solutions",
     Icon: Cpu,
-    fallbackName: "AI Solutions",
-    fallbackDescription:
-      "AI-powered solutions that automate and enhance digital experiences.",
+    fallback: {
+      en: {
+        name: "AI Solutions",
+        description:
+          "AI-powered solutions that automate and enhance digital experiences.",
+      },
+      pt: {
+        name: "Soluções de IA",
+        description:
+          "Soluções com inteligência artificial que automatizam e melhoram experiências digitais.",
+      },
+    },
     className:
       "min-h-[120px] md:min-h-0 md:col-span-3 md:row-span-2 md:col-start-4 md:row-start-6",
   },
   {
     slug: "product-strategy",
     Icon: Chart,
-    fallbackName: "Product Strategy",
-    fallbackDescription:
-      "Strategic guidance for smarter digital growth and innovation.",
+    fallback: {
+      en: {
+        name: "Product Strategy",
+        description:
+          "Strategic guidance for smarter digital growth and innovation.",
+      },
+      pt: {
+        name: "Estratégia de produto",
+        description:
+          "Orientação estratégica para um crescimento digital e uma inovação mais inteligentes.",
+      },
+    },
     className:
       "min-h-[120px] md:min-h-0 md:col-span-3 md:row-span-2 md:col-start-7 md:row-start-6",
   },
@@ -127,72 +195,67 @@ const SERVICE_LAYOUT: ServiceLayoutCell[] = [
 
 export default function ServicesSection({
   services,
+  locale,
 }: {
-  services: PopulatedHomepage["services"];
+  services: Homepage["services"];
+  locale: Locale;
 }) {
   // Merge by slug: pull editable content from the CMS, falling back to the
   // hardcoded copy when a slot has no matching service.
   const servicesBySlug = new Map(
-    (services?.items ?? []).map((s) => [s.slug, s] as const),
+    services.items.map((s) => [s.slug, s] as const),
   );
 
+  // O stagger do v3 é por cartão, e só os cartões revelam: as células vazias
+  // são moldura e ficam paradas.
+  let cardIndex = 0;
+
   return (
-    <div className="w-full h-full flex flex-col justify-start gap-6">
-      <Reveal className="w-full h-full flex flex-col justify-start gap-6 px-14">
-        <Badge
-          className="text-secondary max-w-40"
-          icon={Widget6}
-          iconProps={{
-            weight: "Bold",
-          }}
-        >
-          Our Services
-        </Badge>
-        <div className="w-full h-full flex text-white gap-4 flex-col">
-          <div>
-            {services?.ourServicesCT?.title ? (
-              <TextReveal as="h2" className="text-3xl font-medium">
-                {services.ourServicesCT.title}
-              </TextReveal>
-            ) : null}
-          </div>
-          <div className="max-w-3xl">
-            <p className="text-lg text-white/60">
-              {services?.ourServicesCT?.description}
-            </p>
-          </div>
-        </div>
-      </Reveal>
+    <div className="flex w-full flex-col justify-start gap-8">
+      <div className="px-5 md:px-10 xl:px-14">
+        <SectionHeading
+          badge={BADGE[locale]}
+          title={services.ourServicesCT.title}
+          subtitle={services.ourServicesCT.description}
+        />
+      </div>
       {/*
         Sem `grid-rows`: as linhas são todas implícitas, dimensionadas por
         `auto-rows`. Havia aqui um `md:grid-rows-[repeat(20px)]` que não é CSS
         válido — `repeat()` exige contagem e trilha — e portanto não produzia
         efeito nenhum, apesar de parecer intencional.
+
+        O contentor é o elemento observado (`data-rv-group`) e os cartões
+        animam por baixo dele: estão dentro do `clip-path` do painel, e
+        observá-los um a um é o deadlock que `scroll-reveal-animations` proíbe.
       */}
-      <div className="px-14 md:px-0 flex flex-col md:grid relative w-full md:grid-cols-12 md:auto-rows-[60px] gap-4 after:pointer-events-none after:absolute after:inset-0 after:z-10 after:bg-[linear-gradient(121.55deg,rgba(21,23,24,0.01)_39.57%,rgba(255,255,255,0.01)_83.97%)]">
-        <div className="hidden md:block absolute inset-0 z-20 pointer-events-none [background:radial-gradient(ellipse_65%_55%_at_center,transparent_55%,var(--color-primary)_92%)]" />
-        {SERVICE_LAYOUT.map((cell, index) => {
-          const delay = Math.min(index * 0.05, 0.4);
+      <Reveal
+        group
+        className="relative flex w-full flex-col gap-4 px-5 leading-5 md:grid md:auto-rows-[60px] md:grid-cols-12 md:px-0"
+      >
+        <div className="pointer-events-none absolute inset-0 z-20 hidden [background:radial-gradient(ellipse_65%_55%_at_center,transparent_55%,var(--color-primary)_92%)] md:block" />
+        {SERVICE_LAYOUT.map((cell) => {
           if ("transparent" in cell) {
             return (
-              <Reveal
+              <div
                 key={cell.className}
-                direction="none"
-                delay={delay}
-                className={`${cell.className} bg-white/5 border rounded-xl border-white/5 pointer-events-none`}
+                aria-hidden="true"
+                className={`${cell.className} pointer-events-none rounded-xl border border-white/5 bg-white/4`}
               />
             );
           }
           const service = servicesBySlug.get(cell.slug);
-          const name = service?.title ?? cell.fallbackName;
-          const description =
-            service?.shortDescription ?? cell.fallbackDescription;
+          const fallback = cell.fallback[locale];
+          const name = service?.title ?? fallback.name;
+          const description = service?.shortDescription ?? fallback.description;
           const ItemIcon = cell.Icon;
+          const delay = `${(cardIndex++ * 0.07).toFixed(2)}s`;
           return (
-            <Reveal
-              delay={delay}
-              className={`${cell.className} bg-linear-to-b from-white/10 to-white/0 border border-white/5 rounded-xl overflow-hidden flex flex-col justify-start p-4 gap-2 `}
+            <div
               key={cell.slug}
+              data-rv-item
+              style={{ "--rv-delay": delay } as React.CSSProperties}
+              className={`${cell.className} flex flex-col justify-start gap-2.5 overflow-hidden rounded-xl border border-white/8 bg-linear-to-b from-white/10 to-white/2 p-4`}
             >
               {/*
                 Sem `h-full`: a célula tem altura definida pelo grid e recorta
@@ -201,21 +264,19 @@ export default function ServicesSection({
                 O header ocupa a altura do próprio conteúdo; o resto é da
                 descrição.
               */}
-              <div className="w-full flex flex-row justify-start items-start gap-2 text-white">
-                {ItemIcon && (
-                  <ItemIcon weight="Bold" color="#fff" className="shrink-0" />
-                )}
-                <h3 className="text-base md:text-sm font-medium">{name}</h3>
+              <div className="flex w-full flex-row items-center justify-start gap-2.5 text-white">
+                <span className="inline-flex size-7.5 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/8">
+                  {ItemIcon && <ItemIcon size={16} color="#fff" />}
+                </span>
+                <h3 className="text-[15px] font-semibold">{name}</h3>
               </div>
-              <div>
-                <p className="text-base md:text-sm font-normal text-white/60">
-                  {description}
-                </p>
-              </div>
-            </Reveal>
+              <p className="text-sm leading-[21px] text-white/64">
+                {description}
+              </p>
+            </div>
           );
         })}
-      </div>
+      </Reveal>
     </div>
   );
 }

@@ -1,7 +1,7 @@
-import { Widget6 } from "@solar-icons/react";
 import type { ReactNode } from "react";
-import Badge from "../Badge";
-import { TextReveal } from "../ui/text-reveal";
+import Reveal from "@/components/Reveal";
+import Eyebrow from "../Eyebrow";
+import LitText from "../LitText";
 
 interface SectionHeadingProps {
   badge: ReactNode;
@@ -11,8 +11,13 @@ interface SectionHeadingProps {
   children?: ReactNode;
 }
 
-// Shared header used by the dark sections (Products, Testimonials):
-// a "Widget6" badge, a title and a constrained subtitle.
+// O cabeçalho das três secções do painel escuro (serviços, produtos,
+// testemunhos): a pill, o título e o subtítulo, com a revelação de disparo
+// único do v3.
+//
+// O título acende letra a letra com o scroll (`LitText`) e acaba a branco. O
+// subtítulo é estático, a branco a 64% como no mockup v3: as descrições da
+// home não acendem.
 export default function SectionHeading({
   badge,
   title,
@@ -20,28 +25,21 @@ export default function SectionHeading({
   children,
 }: SectionHeadingProps) {
   return (
-    <div className="w-full h-full flex flex-col justify-start gap-6">
-      <Badge
-        className="text-secondary max-w-40"
-        icon={Widget6}
-        iconProps={{
-          weight: "Bold",
-        }}
-      >
-        {badge}
-      </Badge>
-
-      <div className="w-full h-full flex text-white gap-4 flex-col">
+    <Reveal className="flex w-full flex-col justify-start gap-5">
+      <Eyebrow tone="dark">{badge}</Eyebrow>
+      <div className="flex flex-col gap-3 text-white">
         {title ? (
-          <TextReveal as="h2" className="text-3xl font-medium">
-            {title}
-          </TextReveal>
+          <h2 className="max-w-190 font-gilroy text-[26px] leading-[1.2] font-medium tracking-[-0.02em] text-balance md:text-[30px] lg:text-4xl">
+            <LitText text={title} tone="dark" />
+          </h2>
         ) : null}
-        <div className="max-w-3xl">
-          <p className="text-lg text-white/60">{subtitle}</p>
-        </div>
+        {subtitle ? (
+          <p className="max-w-180 text-lg leading-[30px] text-white/64">
+            {subtitle}
+          </p>
+        ) : null}
       </div>
-      {children ? <div>{children}</div> : null}
-    </div>
+      {children ? <div className="mt-1">{children}</div> : null}
+    </Reveal>
   );
 }
