@@ -161,7 +161,14 @@ async function checkPages(siteId: string) {
 
 async function checkNavigations(siteId: string) {
   const navigations = await read("navigations", {
-    fields: ["key", "items.id"],
+    fields: [
+      "key",
+      "items.id",
+      "items.parent",
+      "items.type",
+      "items.translations.label",
+      "items.children.id",
+    ],
     filter: { site: { _eq: siteId } },
     limit: -1,
   });
@@ -171,6 +178,20 @@ async function checkNavigations(siteId: string) {
     if (!navigation) fail(`navegação "${key}"`, "não existe");
     else if (count === 0) fail(`navegação "${key}"`, "sem itens");
     else pass(`navegação "${key}"`, `${count} itens`);
+  }
+  // Os links de uma coluna vêm em `items` com `parent` (forma antiga) ou só em
+  // `items.children` (forma nova): conta-os nas duas, sem repetir ids.
+  const columns = navigations.find((row) => row.key === "footer_columns");
+  const items = (columns?.items as Row[] | undefined) ?? [];
+  for (const group of items.filter((item) => item.type === "group")) {
+    const links = new Set<unknown>([
+      ...items.filter((item) => item.parent === group.id).map((i) => i.id),
+      ...((group.children as Row[] | undefined) ?? []).map((i) => i.id),
+    ]);
+    const label =
+      (group.translations as Row[] | undefined)?.[0]?.label ?? group.id;
+    if (links.size === 0) fail(`coluna "${label}" do footer`, "sem links");
+    else pass(`coluna "${label}" do footer`, `${links.size} links`);
   }
 }
 
