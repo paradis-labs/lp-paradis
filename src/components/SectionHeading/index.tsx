@@ -15,10 +15,9 @@ interface SectionHeadingProps {
 // testemunhos): a pill, o título e o subtítulo, com a revelação de disparo
 // único do v3.
 //
-// O título e o subtítulo acendem letra a letra com o scroll (`LitText`), cada
-// um no seu intervalo, por isso o subtítulo acende depois do título; os dois
-// acabam a branco. Não é o `TextReveal` palavra a palavra de antes: este
-// efeito é CSS, sem nós de animação em JS.
+// O título acende letra a letra com o scroll (`LitText`) e acaba a branco. O
+// subtítulo é estático, a branco a 64% como no mockup v3: as descrições da
+// home não acendem.
 export default function SectionHeading({
   badge,
   title,
@@ -35,8 +34,8 @@ export default function SectionHeading({
           </h2>
         ) : null}
         {subtitle ? (
-          <p className="max-w-180 text-lg leading-[30px]">
-            <LitText text={subtitle} tone="dark" />
+          <p className="max-w-180 text-lg leading-[30px] text-white/64">
+            {subtitle}
           </p>
         ) : null}
       </div>

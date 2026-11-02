@@ -53,7 +53,7 @@ export default function FAQSection({
         ) : null}
         {subtitle ? (
           <p className="text-lg leading-[30px] text-muted-foreground">
-            <LitText text={subtitle} tone="inherit" />
+            {subtitle}
           </p>
         ) : null}
       </Reveal>

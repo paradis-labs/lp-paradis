@@ -78,7 +78,7 @@ export default async function Home(props: {
               )}
               {services.subtitle && (
                 <p className="text-[19px] leading-[31px] text-muted-foreground">
-                  <LitText text={services.subtitle} tone="inherit" />
+                  {services.subtitle}
                 </p>
               )}
             </div>
