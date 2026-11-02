@@ -524,21 +524,33 @@ const rawNavigation = z.object({
   items: z.array(z.unknown()).nullish(),
 });
 
+// Os links de um grupo chegam em `items.children` (forma nova do hcms, só com
+// `parent`) ou também em `items` com `parent` (forma antiga, que os traz nos
+// dois sítios). Os dois níveis pedem os mesmos campos.
+const NAV_ITEM_FIELDS = [
+  "id",
+  "parent",
+  "sort",
+  "type",
+  "variant",
+  "page.key",
+  "anchor",
+  "url",
+  "open_in_new_tab",
+  "translations.languages_code",
+  "translations.label",
+];
+
+const rawNavChildren = z.object({
+  children: z.array(z.unknown()).nullish(),
+});
+
 async function readNavigations(keys: string[], where: Where) {
   const rows = await read("navigations", {
     fields: [
       "key",
-      "items.id",
-      "items.parent",
-      "items.sort",
-      "items.type",
-      "items.variant",
-      "items.page.key",
-      "items.anchor",
-      "items.url",
-      "items.open_in_new_tab",
-      "items.translations.languages_code",
-      "items.translations.label",
+      ...NAV_ITEM_FIELDS.map((field) => `items.${field}`),
+      ...NAV_ITEM_FIELDS.map((field) => `items.children.${field}`),
     ],
     filter: { ...bySite, key: { _in: keys } },
     limit: -1,
@@ -547,21 +559,38 @@ async function readNavigations(keys: string[], where: Where) {
   for (const raw of rows) {
     const navigation = rawNavigation.safeParse(raw);
     if (!navigation.success) continue;
-    const items = (navigation.data.items ?? []).flatMap((item) => {
+    const parse = (item: unknown) => {
       const parsed = rawNavItem.safeParse(item);
-      if (parsed.success) return [parsed.data];
+      if (parsed.success) return parsed.data;
       reportDropped(
         where,
         `navigations.${navigation.data.key}`,
         item,
         parsed.error.issues,
       );
-      return [];
-    });
+      return null;
+    };
+    // Um mapa por id junta as duas formas sem repetir os links que vêm nas
+    // duas. O pai de um filho é o grupo onde veio; netos não são lidos.
+    const byId = new Map<string, NavItem>();
+    for (const rawItem of navigation.data.items ?? []) {
+      const item = parse(rawItem);
+      if (!item) continue;
+      if (!byId.has(item.id)) byId.set(item.id, item);
+      const nested = rawNavChildren.safeParse(rawItem);
+      const rawChildren = nested.success ? (nested.data.children ?? []) : [];
+      for (const rawChild of rawChildren) {
+        const child = parse(rawChild);
+        if (child && !byId.has(child.id))
+          byId.set(child.id, { ...child, parent: item.id });
+      }
+    }
+    const items = [...byId.values()];
     items.sort((a, b) => (a.sort ?? 0) - (b.sort ?? 0));
     navigations.set(navigation.data.key, items);
   }
-  // `items` traz a árvore achatada: os filhos aparecem também no topo.
+  // Árvore achatada: grupos e links soltos têm `parent` nulo, e os links de um
+  // grupo têm `parent` igual ao grupo.
   const topLevel = (key: string) =>
     (navigations.get(key) ?? []).filter((item) => item.parent == null);
   const children = (key: string, parent: NavItem) =>
