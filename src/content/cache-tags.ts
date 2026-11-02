@@ -121,7 +121,7 @@ export function hcmsCollectionTags(collection: string): string[] | null {
 /**
  * A rede de segurança: mesmo sem invalidação, uma entrada expira ao fim disto.
  * Um hook que falhe deixa conteúdo antigo no máximo este tempo, não para
- * sempre. Uma hora: o conteúdo muda raramente, e uma edição perdida corrige-se
- * sozinha antes de alguém ter de a reportar.
+ * sempre. Dez minutos: uma edição perdida corrige-se sozinha depressa, e o
+ * hcms só é consultado de novo quando alguém pede a página.
  */
-export const CONTENT_MAX_AGE_SECONDS = 60 * 60;
+export const CONTENT_MAX_AGE_SECONDS = 10 * 60;

@@ -2,7 +2,7 @@
 
 Para quem administra o hcms (`hcms.paradis.host`).
 
-**O que faz:** quando um editor grava conteúdo, o hcms avisa o site, e o site deixa de servir a versão em cache. Sem isto, o conteúdo atualiza na mesma, mas só ao fim de 1 hora (a expiração máxima da cache).
+**O que faz:** quando um editor grava conteúdo, o hcms avisa o site, e o site deixa de servir a versão em cache. Sem isto, o conteúdo atualiza na mesma, mas só ao fim de 10 minutos (a expiração máxima da cache).
 
 **Não é preciso criar nenhum Flow.** O template do hcms (`Template-multisite-tenant`) já traz o flow **"Revalidate site"**. Depois de cada `items.create`, `items.update` e `items.delete` de conteúdo, ele faz um `POST` ao `revalidate_url` de cada site que o tenha preenchido. Basta configurar o site.
 
@@ -62,7 +62,7 @@ Cada pedido do flow deixa uma linha `[cache]` nos logs do site:
 
 Sem o segredo, o site também avisa ao arrancar: `[cache] CMS_REVALIDATE_SECRET em falta: a revalidação pelo hcms está desligada…`.
 
-**Desenvolvimento local e staging:** o `revalidate_url` aponta para um só site, o de produção. Um `npm run dev` ou um staging nunca recebe o aviso do hcms, e serve conteúdo até 1 hora desatualizado. Para revalidar à mão, com o mesmo `CMS_REVALIDATE_SECRET` do servidor:
+**Desenvolvimento local e staging:** o `revalidate_url` aponta para um só site, o de produção. Um `npm run dev` ou um staging nunca recebe o aviso do hcms, e serve conteúdo até 10 minutos desatualizado. Para revalidar à mão, com o mesmo `CMS_REVALIDATE_SECRET` do servidor:
 
 ```bash
 CMS_REVALIDATE_SECRET=… npm run cms:revalidate -- http://localhost:3000

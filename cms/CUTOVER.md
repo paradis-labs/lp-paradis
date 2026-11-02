@@ -78,7 +78,7 @@ A cache não precisa de ser limpa: o provider faz parte da chave da cache, por i
 - [ ] Submeter o formulário com o nome `TESTE CUTOVER` → quem administra o hcms confirma um `form_submissions` novo (o site não o consegue ler, de propósito).
 - [ ] Editar no hcms o título de um projeto → o pedido seguinte a `/en` mostra-o, e os logs do site mostram `[cache] revalidado pelo hcms`. Repor o título.
 
-Sem a revalidação configurada, o conteúdo atualiza na mesma, mas só ao fim de 1 h. Registar e seguir: não é motivo para rollback.
+Sem a revalidação configurada, o conteúdo atualiza na mesma, mas só ao fim de 10 min. Registar e seguir: não é motivo para rollback.
 
 ### 5. Fecho
 

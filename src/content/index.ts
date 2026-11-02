@@ -103,7 +103,7 @@ export async function getContact(locale: Locale) {
 
 // Sem cache, de propósito. `isQuoteFormEnabled` é a válvula da Server Action:
 // fechar o formulário no CMS tem de valer na submissão seguinte, não daqui a
-// uma hora. As outras duas são a escrita e a sua preparação — duas submissões
+// 10 minutos. As outras duas são a escrita e a sua preparação — duas submissões
 // iguais são duas submissões.
 export const { isQuoteFormEnabled, findServicesBySlugs, createQuoteRequest } =
   provider;
